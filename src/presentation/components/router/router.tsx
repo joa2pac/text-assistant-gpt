@@ -9,7 +9,7 @@ import {
   TextToAudioPage,
   TranslatePage,
 } from "../pages/indext";
-import { ProsConsPage } from "../pages/pros-cons-stream/ProsConsPage";
+import { ProsConsPage } from "../pages/pros-cons/ProsConsPage";
 import { DashboardLayout } from "../layouts/DashboardLayout";
 
 export const menuRoutes = [
