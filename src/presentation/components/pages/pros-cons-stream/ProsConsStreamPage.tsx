@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { GptMessages, MyMessages, TypingLoader, TextMessageBox } from "../../../components";
 
 import { prosConsStreamGeneratorUseCase } from "../../../../core/use-cases";
@@ -9,15 +9,24 @@ interface Messages {
 }
 
 export const ProsConsStreamPage = () => {
+  const abortController = useRef(new AbortController());
+  const isRunning = useRef(false);
+
   const [messages, setMessages] = useState<Messages[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const handlePost = async (text: string) => {
+    if (isRunning.current) {
+      abortController.current.abort();
+      abortController.current = new AbortController();
+    }
+
     setIsLoading(true);
+    isRunning.current = true;
 
     setMessages((prev) => [...prev, { text: text, isGPT: false }]);
 
-    const stream = await prosConsStreamGeneratorUseCase(text);
+    const stream = prosConsStreamGeneratorUseCase(text, abortController.current.signal);
     setIsLoading(false);
 
     setMessages((messages) => [...messages, { text: "", isGPT: true }]);
@@ -28,6 +37,8 @@ export const ProsConsStreamPage = () => {
         newMessages[newMessages.length - 1].text = text;
         return newMessages;
       });
+
+      isRunning.current = false;
     }
 
     setIsLoading(false);
