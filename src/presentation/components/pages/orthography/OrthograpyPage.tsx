@@ -54,7 +54,7 @@ export const OrthograpyPage = () => {
     <div className="chat-container">
       <div className="chat-messages">
         <div className="grid grid-cols-12 gap-y-2">
-          <GptMessages text="Hola Mundo, esto es una aplicacion de react, usando la API de apenai xD" />
+          <GptMessages text="Ingrese el texto que desea corregir" />
           {messages.map((message, index) =>
             message.isGPT ? (
               <GptOrthographyMessages

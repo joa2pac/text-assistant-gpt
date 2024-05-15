@@ -13,8 +13,12 @@ h1 {
   @apply text-3xl font-bold mb-4;
 }
 
+h3 {
+  @apply text-3xl font-bold my-4 text-red-500;
+}
+
 p {
-  @apply mb-4;
+  @apply my-4 text-sm font-semibold;
 }
 
 ul {
