@@ -17,21 +17,23 @@ export const prosConsStreamUseCase = async (prompt: string) => {
       return null;
     }
 
-    const decoder = new TextDecoder();
+    return reader;
 
-    let text = "";
+    // const decoder = new TextDecoder();
 
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) {
-        break;
-      }
+    // let text = "";
 
-      const decodedChunk = decoder.decode(value, { stream: true });
-      text += decodedChunk;
-      console.log(text);
-    }
+    // // eslint-disable-next-line no-constant-condition
+    // while (true) {
+    //   const { value, done } = await reader.read();
+    //   if (done) {
+    //     break;
+    //   }
+
+    //   const decodedChunk = decoder.decode(value, { stream: true });
+    //   text += decodedChunk;
+    //   console.log(text);
+    // }
   } catch (error) {
     console.log(error);
     return null;

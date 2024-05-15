@@ -16,7 +16,29 @@ export const ProsConsStreamPage = () => {
 
     setMessages((prev) => [...prev, { text: text, isGPT: false }]);
 
-    await prosConsStreamUseCase(text);
+    const reader = await prosConsStreamUseCase(text);
+
+    if (!reader) return alert("No se pudo generar el reader");
+
+    const decoder = new TextDecoder();
+
+    let message = "";
+    setMessages((messages) => [...messages, { text: message, isGPT: true }]);
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      const decodedChunk = decoder.decode(value, { stream: true });
+      message += decodedChunk;
+
+      setMessages((messages) => {
+        const newMessages = [...messages];
+        newMessages[newMessages.length - 1].text = message;
+        return newMessages;
+      });
+    }
 
     setIsLoading(false);
   };
@@ -28,10 +50,7 @@ export const ProsConsStreamPage = () => {
           <GptMessages text="¿Que deseas comparar hoy?" />
           {messages.map((message, index) =>
             message.isGPT ? (
-              <GptMessages
-                key={index}
-                text="Hola Mundo, esto es una aplicacion de react, usando la API de apenai xD"
-              />
+              <GptMessages key={index} text={message.text} />
             ) : (
               <MyMessages key={index} text={message.text} />
             )
