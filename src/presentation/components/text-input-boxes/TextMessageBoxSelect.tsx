@@ -25,6 +25,7 @@ export const TextMessageBoxSelect: FC<TextMessagesBoxSelectProps> = ({
     event.preventDefault();
 
     if (message.trim().length === 0) return;
+    if (selectedOption === "") return;
 
     onSendMessages(message, selectedOption);
     setMessage("");
