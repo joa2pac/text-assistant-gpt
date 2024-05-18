@@ -1,7 +1,7 @@
 import { FC, FormEvent, useRef, useState } from "react";
 
 interface TextMessagesProps {
-  onSendMessages: (messages: string) => void;
+  onSendMessages: (messages: string, file: File) => void;
   placeHolder?: string;
   disabledCorrections?: boolean;
   accept?: string;
@@ -23,10 +23,13 @@ export const TextMessageBoxFile: FC<TextMessagesProps> = ({
   const handleSendMessages = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (message.trim().length === 0) return;
+    // if (message.trim().length === 0) return;
 
-    onSendMessages(message);
+    if (!selectedFile) return;
+
+    onSendMessages(message, selectedFile);
     setMessage("");
+    setSelectedFile(null);
 
     console.log("HandleSubmit");
   };
