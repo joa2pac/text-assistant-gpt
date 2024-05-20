@@ -2,10 +2,10 @@ interface Props {
   text: string;
   imageUrl: string;
   alt: string;
+  onImageSelected?: (imagUrl: string) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const GptImageMessages = ({ text, imageUrl, alt }: Props) => {
+export const GptImageMessages = ({ imageUrl, alt, onImageSelected }: Props) => {
   return (
     <div className="col-start-1 col-end-9 rounded-lg">
       <div className="flex flex-row items-start">
@@ -14,7 +14,12 @@ export const GptImageMessages = ({ text, imageUrl, alt }: Props) => {
         </div>
         <div className="relative ml-3 bg-black bg-opacity-25 pt-3 pb-2 px-4 shadow rounded-xl">
           {/* <span>{text}</span> */}
-          <img src={imageUrl} alt={alt} className=" rounded-xl w-96 h-96 object-cover" />
+          <img
+            src={imageUrl}
+            alt={alt}
+            className=" rounded-xl w-96 h-96 object-cover"
+            onClick={() => onImageSelected && onImageSelected(imageUrl)}
+          />
         </div>
       </div>
     </div>
