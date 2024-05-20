@@ -1,5 +1,6 @@
 export * from "./chat-bubbles/GptMessages";
 export * from "./chat-bubbles/MyMessages";
+export * from "./chat-bubbles/GptImageMessages";
 export * from "./sidebar/SidebarMenuItem";
 export * from "./loaders/TypingLoader";
 export * from "./text-input-boxes/TextMessageBox";

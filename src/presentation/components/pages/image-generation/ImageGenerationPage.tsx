@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { GptMessages, MyMessages, TypingLoader, TextMessageBox } from "../../../components";
+import {
+  GptMessages,
+  MyMessages,
+  TypingLoader,
+  TextMessageBox,
+  GptImageMessages,
+} from "../../../components";
 import { imageGenerationUseCase } from "../../../../core/use-cases";
 
 interface Messages {
@@ -29,6 +35,18 @@ export const ImageGenerationPage = () => {
         { text: "No se pudo generar la imagen", isGPT: true },
       ]);
     }
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        text: text,
+        isGPT: true,
+        info: {
+          imageUrl: imageInfo.url,
+          alt: imageInfo.alt,
+        },
+      },
+    ]);
   };
 
   return (
@@ -38,9 +56,11 @@ export const ImageGenerationPage = () => {
           <GptMessages text="¿Que imagen deseas generar ?" />
           {messages.map((message, index) =>
             message.isGPT ? (
-              <GptMessages
+              <GptImageMessages
                 key={index}
-                text="Hola Mundo, esto es una aplicacion de react, usando la API de apenai xD"
+                text={message.text}
+                imageUrl={message.info!.imageUrl}
+                alt={message.info!.alt}
               />
             ) : (
               <MyMessages key={index} text={message.text} />
