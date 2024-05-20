@@ -4,7 +4,7 @@ import {
   MyMessages,
   TypingLoader,
   TextMessageBox,
-  GptImageMessages,
+  GptSelectableImages,
 } from "../../../components";
 import { imageGenerationUseCase, imageVariationUseCase } from "../../../../core/use-cases";
 
@@ -18,7 +18,16 @@ interface Messages {
 }
 
 export const ImageTunningPage = () => {
-  const [messages, setMessages] = useState<Messages[]>([]);
+  const [messages, setMessages] = useState<Messages[]>([
+    {
+      isGPT: true,
+      text: "Imagen base",
+      info: {
+        alt: "Imagen base",
+        imageUrl: "http://localhost:3000/gpt/image-generation/1716114333727.png",
+      },
+    },
+  ]);
   const [isLoading, setIsLoading] = useState(false);
 
   const [originalImageAndMask, setOriginalImageAndMask] = useState({
@@ -96,17 +105,12 @@ export const ImageTunningPage = () => {
             <GptMessages text="¿Que imagen deseas generar ?" />
             {messages.map((message, index) =>
               message.isGPT ? (
-                <GptImageMessages
+                // <GptImageMessages
+                <GptSelectableImages
                   key={index}
                   text={message.text}
                   imageUrl={message.info!.imageUrl}
                   alt={message.info!.alt}
-                  onImageSelected={(url) =>
-                    setOriginalImageAndMask({
-                      original: url,
-                      mask: undefined,
-                    })
-                  }
                 />
               ) : (
                 <MyMessages key={index} text={message.text} />

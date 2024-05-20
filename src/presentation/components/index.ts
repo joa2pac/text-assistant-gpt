@@ -8,3 +8,4 @@ export * from "./text-input-boxes/TextMessageBoxFile";
 export * from "./text-input-boxes/TextMessageBoxSelect";
 export * from "./chat-bubbles/GptOrthographyMessage";
 export * from "./chat-bubbles/GptMessagesAudio";
+export * from "./chat-bubbles/GptSelectableImages";
