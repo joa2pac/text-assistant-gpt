@@ -5,21 +5,15 @@ interface Image {
   alt: string;
 }
 
-export const imageGenerationUseCase = async (
-  prompt: string,
-  originalImage?: string,
-  maskImage?: string
-): Promise<GeneratedImage> => {
+export const imageVariationUseCase = async (originalImage: string): Promise<GeneratedImage> => {
   try {
-    const resp = await fetch(`${import.meta.env.VITE_GPT_API}/image-generation`, {
+    const resp = await fetch(`${import.meta.env.VITE_GPT_API}/image-variation`, {
       method: "POST",
       headers: {
         "Content-type": "application/json",
       },
       body: JSON.stringify({
-        prompt,
-        originalImage,
-        maskImage,
+        baseImage: originalImage,
       }),
     });
 
