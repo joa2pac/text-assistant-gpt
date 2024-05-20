@@ -4,3 +4,4 @@ export * from "./prosConsStream.use-case";
 export * from "./prosConsStreamGenerator.use-case";
 export * from "./text-to-audio.use-case";
 export * from "./audioToText.use.case";
+export * from "./image-generation.use.case";
