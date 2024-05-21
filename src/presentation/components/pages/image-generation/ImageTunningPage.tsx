@@ -1,16 +1,15 @@
 import { useState } from "react";
-import {
-  GptMessages,
-  MyMessages,
-  TypingLoader,
-  TextMessageBox,
-  GptSelectableImages,
-} from "../../../components";
 import { imageGenerationUseCase, imageVariationUseCase } from "../../../../core/use-cases";
+import { TypingLoader } from "../../loaders/TypingLoader";
+import { TextMessageBox } from "../../text-input-boxes/TextMessageBox";
+import { GptMessages } from "../../chat-bubbles/GptMessages";
 
-interface Messages {
+import { MyMessages } from "../../chat-bubbles/MyMessages";
+import { GptMessageSelectableImage } from "../../chat-bubbles/GptSelectableImages";
+
+interface Message {
   text: string;
-  isGPT: boolean;
+  isGpt: boolean;
   info?: {
     imageUrl: string;
     alt: string;
@@ -18,9 +17,10 @@ interface Messages {
 }
 
 export const ImageTunningPage = () => {
-  const [messages, setMessages] = useState<Messages[]>([
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
     {
-      isGPT: true,
+      isGpt: true,
       text: "Imagen base",
       info: {
         alt: "Imagen base",
@@ -28,7 +28,6 @@ export const ImageTunningPage = () => {
       },
     },
   ]);
-  const [isLoading, setIsLoading] = useState(false);
 
   const [originalImageAndMask, setOriginalImageAndMask] = useState({
     original: undefined as string | undefined,
@@ -45,8 +44,8 @@ export const ImageTunningPage = () => {
     setMessages((prev) => [
       ...prev,
       {
-        text: "Variation",
-        isGPT: true,
+        text: "Variación",
+        isGpt: true,
         info: {
           imageUrl: resp.url,
           alt: resp.alt,
@@ -57,16 +56,17 @@ export const ImageTunningPage = () => {
 
   const handlePost = async (text: string) => {
     setIsLoading(true);
+    setMessages((prev) => [...prev, { text: text, isGpt: false }]);
 
-    setMessages((prev) => [...prev, { text: text, isGPT: false }]);
+    const { original, mask } = originalImageAndMask;
 
-    const imageInfo = await imageGenerationUseCase(text);
+    const imageInfo = await imageGenerationUseCase(text, original, mask);
     setIsLoading(false);
 
     if (!imageInfo) {
       return setMessages((prev) => [
         ...prev,
-        { text: "No se pudo generar la imagen", isGPT: true },
+        { text: "No se pudo generar la imagen", isGpt: true },
       ]);
     }
 
@@ -74,7 +74,7 @@ export const ImageTunningPage = () => {
       ...prev,
       {
         text: text,
-        isGPT: true,
+        isGpt: true,
         info: {
           imageUrl: imageInfo.url,
           alt: imageInfo.alt,
@@ -86,7 +86,7 @@ export const ImageTunningPage = () => {
   return (
     <>
       {originalImageAndMask.original && (
-        <div className="fixed flex-col items-center top-10 right-10 z-10 fade-in">
+        <div className="fixed flex flex-col items-center top-10 right-10 z-10 fade-in">
           <span>Editando</span>
           <img
             className="border rounded-xl w-36 h-36 object-contain"
@@ -102,18 +102,20 @@ export const ImageTunningPage = () => {
       <div className="chat-container">
         <div className="chat-messages">
           <div className="grid grid-cols-12 gap-y-2">
-            <GptMessages text="¿Que imagen deseas generar ?" />
+            {/* Bienvenida */}
+            <GptMessages text="¿Qué imagen deseas generar hoy?" />
+
             {messages.map((message, index) =>
-              message.isGPT ? (
-                // <GptImageMessages
-                <GptSelectableImages
+              message.isGpt ? (
+                // <GptMessageImage
+                <GptMessageSelectableImage
                   key={index}
                   text={message.text}
-                  imageUrl={message.info!.imageUrl}
-                  alt={message.info!.alt}
+                  imageUrl={message.info!.imageUrl!}
+                  alt={message.info!.alt!}
                   onImageSelected={(maskImageUrl) =>
                     setOriginalImageAndMask({
-                      original: message.info!.imageUrl,
+                      original: message.info!.imageUrl!,
                       mask: maskImageUrl,
                     })
                   }
@@ -125,14 +127,15 @@ export const ImageTunningPage = () => {
 
             {isLoading && (
               <div className="col-start-1 col-end-12 fade-in">
-                <TypingLoader className="fade-in" />
+                <TypingLoader />
               </div>
             )}
           </div>
         </div>
+
         <TextMessageBox
           onSendMessages={handlePost}
-          placeHolder="Typing to message"
+          placeHolder="Escribe aquí lo que deseas"
           disabledCorrections
         />
       </div>

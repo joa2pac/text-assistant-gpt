@@ -14,7 +14,7 @@ export const imageGenerationUseCase = async (
     const resp = await fetch(`${import.meta.env.VITE_GPT_API}/image-generation`, {
       method: "POST",
       headers: {
-        "Content-type": "application/json",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         prompt,
