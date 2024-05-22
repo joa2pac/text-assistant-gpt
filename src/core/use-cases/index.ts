@@ -7,3 +7,4 @@ export * from "./audioToText.use.case";
 export * from "./image-generation.use.case";
 export * from "./image-variation.use.case";
 export * from "./create-thread-assistant.use.case";
+export * from "./post-questions.use.case";

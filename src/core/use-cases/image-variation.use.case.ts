@@ -10,7 +10,7 @@ export const imageVariationUseCase = async (originalImage: string): Promise<Gene
     const resp = await fetch(`${import.meta.env.VITE_GPT_API}/image-variation`, {
       method: "POST",
       headers: {
-        "Content-type": "application/json",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         baseImage: originalImage,

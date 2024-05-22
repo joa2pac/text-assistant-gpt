@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { GptMessages, MyMessages, TypingLoader, TextMessageBox } from "../../../components";
-import { createTheadUseCase } from "../../../../core/use-cases";
+import { createTheadUseCase, postQuestionsUSeCase } from "../../../../core/use-cases";
 
 interface Messages {
   text: string;
@@ -27,11 +27,22 @@ export const AssistantPage = () => {
   }, []);
 
   const handlePost = async (text: string) => {
-    setIsLoading(true);
+    if (!threadId) return;
 
+    setIsLoading(true);
     setMessages((prev) => [...prev, { text: text, isGPT: false }]);
 
+    const replies = await postQuestionsUSeCase(threadId, text);
     setIsLoading(false);
+
+    for (const reply of replies) {
+      for (const message of reply.content) {
+        setMessages((prev) => [
+          ...prev,
+          { text: message, isGPT: reply.role === "assistant", info: reply },
+        ]);
+      }
+    }
   };
 
   return (
@@ -41,10 +52,7 @@ export const AssistantPage = () => {
           <GptMessages text="Hola, soy un koreano que canta k-pop, ¿en que puedo ayudarte?" />
           {messages.map((message, index) =>
             message.isGPT ? (
-              <GptMessages
-                key={index}
-                text="Hola Mundo, esto es una aplicacion de react, usando la API de apenai xD"
-              />
+              <GptMessages key={index} text={message.text} />
             ) : (
               <MyMessages key={index} text={message.text} />
             )
