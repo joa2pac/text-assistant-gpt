@@ -3,6 +3,7 @@ import {
   AssistantPage,
   AudioToTextPage,
   ImageGenerationPage,
+  ImageToTextPage,
   ImageTunningPage,
   OrthograpyPage,
   ProsConsStreamPage,
@@ -76,6 +77,13 @@ export const menuRoutes = [
     title: "Asistente",
     description: "Información del asistente",
     component: <AssistantPage />,
+  },
+  {
+    to: "/image-to-text",
+    icon: "fa-solid fa-image",
+    title: "Image To Text",
+    description: "Convertir imagen a texto",
+    component: <ImageToTextPage />,
   },
 ];
 
