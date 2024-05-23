@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { GptMessages, MyMessages, TypingLoader, TextMessageBoxFile } from "../../../components";
-import { audioToTextUseCase } from "../../../../core/use-cases";
+
+import { imageToTextUseCase } from "../../../../core/use-cases/imageToText.use.case";
 
 interface Messages {
   text: string;
@@ -11,46 +12,31 @@ export const ImageToTextPage = () => {
   const [messages, setMessages] = useState<Messages[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handlePost = async (text: string, audioFile: File) => {
+  const handlePost = async (text: string, imageFile: File) => {
     setIsLoading(true);
 
     setMessages((prev) => [...prev, { text: text, isGPT: false }]);
 
-    const resp = await audioToTextUseCase(audioFile, text);
+    const resp = await imageToTextUseCase(imageFile, text);
     setIsLoading(false);
 
     if (!resp) return;
 
-    const gptMessage = `
-    ## Transcripción: 
-    _Duracion:_ ${Math.round(resp.duration)} segundos
-  ## El texto es:
-  ${resp.text}
-    `;
-
-    for (const segment of resp.segments) {
-      const segmentMessage = `
-  _De ${Math.round(segment.start)} a ${Math.round(segment.end)} segundos:_
-  ${segment.text}
-  `;
-      setMessages((prev) => [...prev, { text: segmentMessage, isGPT: true }]);
-    }
-
-    setMessages((prev) => [...prev, { text: gptMessage, isGPT: true }]);
+    setMessages((prev) => [...prev, { text: resp.msg, isGPT: true }]);
   };
 
   return (
     <div className="chat-container">
       <div className="chat-messages">
         <div className="grid grid-cols-12 gap-y-2">
-          <GptMessages text="Ingresa tu archivo de audio para transcribir." />
+          <GptMessages text="Ingresa tu archivo de imagen para generar un texto." />
           {messages.map((message, index) =>
             message.isGPT ? (
               <GptMessages key={index} text={message.text} />
             ) : (
               <MyMessages
                 key={index}
-                text={message.text === "" ? "Transcribe el audio" : message.text}
+                text={message.text === "" ? "Describe la imagen" : message.text}
               />
             )
           )}
