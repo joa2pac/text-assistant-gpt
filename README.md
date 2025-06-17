@@ -289,79 +289,33 @@ sequenceDiagram
 ### WEBHOOK:
 
 ```mermaid
----
-config:
-  theme: neo-dark
-  look: neo
-  themeVariables:
-    sequenceMessageTextColor: "#ffffff"
----
 sequenceDiagram
     participant VTEX
-    participant WS as WebhookService
-    participant OP as OrderProcessor
-    participant C as Cliente
-    participant PR as Productos
-    participant AD as Dirección
-    participant PC as Precios
-    participant TS as Timestamps
-    participant KL as KlaviyoAPI
-    participant EH as ErrorHandler
-    participant DB as BaseDeDatos
+    participant Webhook
+    participant Processor
+    participant Klaviyo
 
-    %% Recepción de Webhook
-    rect rgb(100,100,100)
-    VTEX->>WS: Evento de Orden
-    WS->>OP: POST /api/v1/webhooks/vtex/orders
-    end
+    note over VTEX,Webhook: Order Event
+    VTEX->>Webhook: Order Status Change
+    Webhook->>Processor: Process Order
 
-    %% Validación de Sales Channel
-    rect rgb(100,100,100)
-    OP->>OP: Validar Sales Channel
-    alt No válido
-        OP-->>VTEX: 200 OK (orden descartada)
-    else Válido
-        OP->>OP: Formatear Precios (dividir por 100)
-    end
+    note over Processor: Validation & Formatting
+    Processor->>Processor: Validate Sales Channel
+    Processor->>Processor: Format Prices & Data
+
+    note over Processor,Klaviyo: Event Mapping
+    alt Order Status
+        Processor->>Klaviyo: Canceled Order
+    else
+        Processor->>Klaviyo: Invoiced Order
+    else
+        Processor->>Klaviyo: Ready to Ship
+    else
+        Processor->>Klaviyo: Placed Order
     end
 
-    %% Procesamiento y Formateo de Datos
-    rect rgb(100,100,100)
-    OP->>OP: Procesar Orden
-    OP->>C: Extraer Cliente
-    OP->>PR: Extraer Productos
-    OP->>AD: Extraer Dirección
-    OP->>PC: Extraer Precios
-    OP->>TS: Extraer Timestamps
-    end
-
-    %% Determinar y Trackear Evento en Klaviyo
-    rect rgb(100,100,100)
-    OP->>OP: Determinar Tipo de Evento
-    alt Canceled
-        OP->>KL: Track Canceled Order
-    else Invoiced
-        OP->>KL: Track Invoiced Order
-    else Ready-for-handling
-        OP->>KL: Track Ready to Ship
-    else Order-accepted
-        OP->>KL: Track Placed Order
-    end
-    end
-
-    %% Manejo de errores
-    rect rgb(100,100,100)
-    KL-->>OP: Error?
-    opt Manejo de Errores
-        OP->>EH: Handle Error
-        EH->>DB: Actualizar Error Stack
-    end
-    end
-
-    %% Confirmación final
-    rect rgb(100,100,100)
-    KL-->>VTEX: 200 OK (evento trackeado)
-    end
+    note over Klaviyo,VTEX: Response
+    Klaviyo-->>VTEX: Event Tracked
 ```
 
 ---
