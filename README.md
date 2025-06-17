@@ -247,82 +247,43 @@ sequenceDiagram
 ### ONBOARDING:
 
 ```mermaid
----
-config:
-  theme: neo-dark
-  look: neo
-  themeVariables:
-    sequenceMessageTextColor: "#ffffff"
----
 sequenceDiagram
-    participant U as Usuario
-    participant OS as OnboardingService
-    participant VT as VTEX
-    participant DB as Base de Datos
-    participant KL as Klaviyo
-    participant SY as SyncService
+    actor User
+    participant Onboarding
+    participant VTEX
+    participant Database
+    participant Klaviyo
+    participant Sync
 
-    %% Inicio
-    rect rgb(100,100,100)
-    U->>OS: Inicia Onboarding
-    end
+    note over User,Onboarding: VTEX Setup
+    User->>Onboarding: Submit VTEX Credentials
+    Onboarding->>VTEX: Validate Credentials
+    VTEX-->>Onboarding: Validation Result
+    Onboarding->>Database: Create User
+    Database-->>Onboarding: User Created
 
-    %% Paso 1: VTEX
-    rect rgb(100,100,100)
-    OS->>VT: POST /api/v1/onboarding/vtex\n(vtexUrl, token)
-    VT-->>OS: { valid: true } / { valid: false }
-    alt Credenciales VTEX inválidas
-        OS-->>U: 401 VTEX inválidas
-    else Credenciales VTEX válidas
-        OS->>DB: Crear usuario en DB
-        DB-->>OS: userId
-    end
-    end
+    note over User,Onboarding: Klaviyo Setup
+    User->>Onboarding: Submit Klaviyo Keys
+    Onboarding->>Klaviyo: Validate Keys
+    Klaviyo-->>Onboarding: Validation Result
 
-    %% Paso 2: Klaviyo
-    rect rgb(100,100,100)
-    OS->>KL: POST /api/v1/onboarding/auth\n(klaviyoKey)
-    KL-->>OS: { valid: true } / { valid: false }
-    alt Credenciales Klaviyo inválidas
-        OS-->>U: 401 Klaviyo inválidas
-    else Credenciales Klaviyo válidas
-        OS-->>OS: Configurar sincronización
-    end
+    note over User,Onboarding: Sync Configuration
+    User->>Onboarding: Configure Sync Options
+    Note right of User: Products Sync<br/>Order Period (0/6/12 months)
+    Onboarding->>Sync: Initialize Sync
+
+    note over Sync: Parallel Sync Process
+    par Products
+        Sync->>Sync: Sync Products
+    and Orders
+        Sync->>Sync: Sync Orders
+    and Customers
+        Sync->>Sync: Sync Customers
     end
 
-    %% Opciones al cliente
-    rect rgb(100,100,100)
-    OS-->>U: { syncProducts: bool, periodo: meses }
-    end
-
-    %% Confirmación y arranque de sincronización
-    rect rgb(100,100,100)
-    U->>OS: Confirmar opciones\n(syncProducts, periodo)
-    OS->>SY: Inicializar Sync\n(params)
-    end
-
-    %% Proceso de sincronización paralelo
-    rect rgb(100,100,100)
-    par Sincronizar Productos
-        SY->>SY: Sync Products
-        SY->>SY: Actualizar syncProductsStatus
-    and Sincronizar Órdenes
-        SY->>SY: Sync Orders
-        SY->>SY: Actualizar syncOrdersStatus
-    and Sincronizar Customers
-        SY->>SY: Sync Customers
-        SY->>SY: Actualizar syncCustomersStatus
-    end
-    SY-->>OS: Estados actualizados
-    OS-->>U: Onboarding completado
-    end
-
-    %% Configuración adicional
-    rect rgb(100,100,100)
-    U->>OS: POST /api/v1/preferences\n(timezone)
-    OS->>DB: Guardar preferences
-    DB-->>OS: OK
-    end
+    note over User,Onboarding: Complete Setup
+    Sync-->>Onboarding: Sync Status
+    Onboarding-->>User: Setup Complete
 ```
 
 ### WEBHOOK:
