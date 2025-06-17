@@ -217,64 +217,31 @@ List of available routes (base path: `/api/v1`):
 ### AUTH:
 
 ```mermaid
----
-config:
-  theme: neo-dark
-  look: neo
-  themeVariables:
-    sequenceMessageTextColor: "#ffffff"
----
 sequenceDiagram
-    participant U as Usuario
-    participant FE as Frontend
-    participant BE as AuthService
-    participant DB as Base de Datos
-    participant MW as Middleware
+    actor User
+    participant Frontend
+    participant AuthService
+    participant Database
 
-    rect rgb(100, 100, 100)
-    U->>FE: POST /api/v1/auth/login\n(vtexUrl, password)
-    FE->>BE: POST /api/v1/auth/login
-    end
+    note over User,Frontend: Login Process
+    User->>Frontend: POST /auth/login
+    Frontend->>AuthService: Login Request
+    AuthService->>Database: Validate Credentials
+    Database-->>AuthService: User Data
+    AuthService-->>Frontend: JWT Token (24h)
+    Frontend-->>User: Authentication Success
 
-    rect rgb(100, 100, 100)
-    BE->>DB: 1. Buscar usuario
-    DB-->>BE: Registro de usuario
-    BE->>BE: 2. Comparar password
-    alt Credenciales válidas
-        BE->>BE: 3. Generar JWT (24h)
-        BE-->>FE: 200 OK\n{ token }
-    else Credenciales inválidas
-        BE-->>FE: 401 Unauthorized\nError: credenciales
-    end
-    end
+    note over User,Frontend: Protected Routes
+    User->>Frontend: Request Protected Resource
+    Frontend->>AuthService: Request with JWT
+    AuthService-->>Frontend: Protected Data
+    Frontend-->>User: Resource Data
 
-    rect rgb(100, 100, 100)
-    FE-->>U: Respuesta con token
-    U->>FE: GET /protected\n(Authorization: Bearer token)
-    FE->>BE: GET /protected
-    BE->>MW: verifyToken
-    alt Token válido
-        MW-->>BE: Decodifica userId
-        BE-->>FE: 200 OK\n{ datos protegidos }
-    else Token inválido/expirado
-        MW-->>FE: Error de autenticación
-        BE-->>FE: 401 Unauthorized\nToken inválido
-    end
-    FE-->>U: Respuesta protegida
-    end
-
-    rect rgb(100, 100, 100)
-    U->>FE: POST /api/v1/auth/refresh-token\n(Authorization: Bearer token exp.)
-    FE->>BE: POST /api/v1/auth/refresh-token
-    BE->>BE: Verificar token actual
-    alt Token actual válido
-        BE->>BE: Generar nuevo JWT
-        BE-->>FE: 200 OK\n{ newToken }
-    else Token inválido
-        BE-->>FE: 401 Unauthorized\nRefresh token inválido
-    end
-    FE-->>U: Respuesta de renovación
-    end
+    note over User,Frontend: Token Refresh
+    User->>Frontend: Refresh Token Request
+    Frontend->>AuthService: Refresh JWT
+    AuthService-->>Frontend: New JWT Token
+    Frontend-->>User: New Token
 ```
 
 ### ONBOARDING:
