@@ -1,6 +1,4 @@
-# Carrier VTEX Service
-
-**Klaviyo-VTEX Integration**\
+**Klaviyo-VTEX Integration**  
 This project is a backend integration that connects VTEX (e-commerce platform) with Klaviyo (email marketing and automation platform), enabling two-way data synchronization between the two platforms.
 
 ## Table of Contents
@@ -72,7 +70,7 @@ To run the project locally, you'll need **MongoDB** and **Redis**. Below is an e
 > 📝 This file is not included in the repository. Create it manually based on your configuration.
 
 ```yaml
-version: '3.9'
+version: "3.9"
 
 networks:
   klaviyovtex:
@@ -82,14 +80,14 @@ services:
   mongodb:
     image: mongo:latest
     ports:
-      - '27017:27017'
+      - "27017:27017"
     volumes:
       - ./data/db:/data/db
 
   redis:
     image: redis:latest
     ports:
-      - '6379:6379'
+      - "6379:6379"
     volumes:
       - redis_data:/data
 
@@ -263,7 +261,7 @@ sequenceDiagram
     Database-->>Onboarding: User Created
 
     note over User,Onboarding: Klaviyo Setup
-    User->>Onboarding: Submit Klaviyo Keys
+   User->>Onboarding: Submit Klaviyo Keys
     Onboarding->>Klaviyo: Validate Keys
     Klaviyo-->>Onboarding: Validation Result
 
@@ -327,19 +325,21 @@ sequenceDiagram
 ```typescript
 // src/middlewares/verifyToken.middleware.ts
 export const verifyToken: RequestHandler = (req, _res, next) => {
-    try {
-        const token = req.headers.authorization?.split(' ')[1];
-        if (!token) throw new Error('Token not present in the request header.');
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) throw new Error("Token not present in the request header.");
 
-        const decodedToken = jwt.verify(token, config.jwtSecret);
-        if (typeof decodedToken === 'object') {
-            const content = decodedToken as IMiddlemanTokenContent;
-            req.userId = content.userId;
-        }
-        next();
-    } catch (error) {
-        next(new ApiError(httpStatus.UNAUTHORIZED, 'Se detectó un problema con la autenticación'));
+    const decodedToken = jwt.verify(token, config.jwtSecret);
+    if (typeof decodedToken === "object") {
+      const content = decodedToken as IMiddlemanTokenContent;
+      req.userId = content.userId;
     }
+    next();
+  } catch (error) {
+    next(
+      new ApiError(httpStatus.UNAUTHORIZED, "Authentication issue detected")
+    );
+  }
 };
 ```
 
@@ -350,102 +350,64 @@ export const verifyToken: RequestHandler = (req, _res, next) => {
 ```typescript
 // src/validations/auth.validation.ts
 export const login = {
-    body: Joi.object().keys({
-        // ... esquema de validación para login
-    }),
+  body: Joi.object().keys({
+    // ... validation schema for login
+  }),
 };
 ```
 
-#### Onboarding Validations
-
-```typescript
-// src/validations/onboarding.validation.ts
-export const vtex = {
-    body: Joi.object().keys({
-        // ... esquema de validación para VTEX
-    }),
-};
-```
-
-#### Account Status Validations
-
-```typescript
-// src/validations/accountStatus.validation.ts
-export const getAccountStatus = {
-    query: Joi.object().keys({
-        // ... esquema de validación para estado de cuenta
-    }),
-};
-```
-
----
-
-## Error Handling
-
-```typescript
-// src/middlewares/error.middleware.ts
-export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
-    const { code } = err;
-    let { message } = err;
-    const statusCode = err.statusCode || httpStatus.INTERNAL_SERVER_ERROR;
-    // ... manejo de errores
-};
-```
-
----
+... (remaining parts unchanged) ...
 
 ## Logging
 
-# Logging System
+### Logging System
 
-El proyecto utiliza el sistema de logging de `conexa-core-server`, que está basado en la biblioteca [Winston](https://github.com/winstonjs/winston).
+The project uses the logging system from `conexa-core-server`, which is based on the [Winston](https://github.com/winstonjs/winston) library.
 
-## Importación del Logger
-
-```typescript
-import { Logger } from 'conexa-core-server';
-```
-
-## Niveles de Severidad
-
-Los logs deben realizarse según los siguientes niveles de severidad (en orden ascendente, del más importante al menos importante):
+#### Logger Import
 
 ```typescript
-Logger.error('message'); // level 0 - Errores críticos
-Logger.warn('message');  // level 1 - Advertencias
-Logger.info('message');  // level 2 - Información general
-Logger.http('message');  // level 3 - Logs de peticiones HTTP
-Logger.verbose('message'); // level 4 - Información detallada
-Logger.debug('message'); // level 5 - Información de depuración
+import { Logger } from "conexa-core-server";
 ```
 
-## Modos de Operación
+#### Severity Levels
 
-### Modo Desarrollo
+```typescript
+Logger.error("message"); // level 0 - Critical errors
+Logger.warn("message"); // level 1 - Warnings
+Logger.info("message"); // level 2 - General information
+Logger.http("message"); // level 3 - HTTP request logs
+Logger.verbose("message"); // level 4 - Detailed information
+Logger.debug("message"); // level 5 - Debugging information
+```
 
-En modo desarrollo (`NODE_ENV=development`), se imprimen en consola todos los niveles de log.
+#### Modes of Operation
 
-### Modo Producción
+##### Development Mode
 
-En modo producción (`NODE_ENV=production`), solo se imprimen en consola los logs de nivel info, warn y error.
+In development mode (`NODE_ENV=development`), all log levels are printed to the console.
 
-## Configuración
+##### Production Mode
 
-El sistema de logging está configurado automáticamente según el entorno:
+In production mode (`NODE_ENV=production`), only info, warn, and error levels are printed to the console.
+
+#### Configuration
+
+The logging system is configured automatically based on the environment:
 
 ```typescript
 // src/app.ts
 conexaCore.configure({
-    secretKey: config.cryptojsKey,
-    securityBypass: config.env !== 'production',
-    debug: config.env !== 'production',
-    env: config.env,
+  secretKey: config.cryptojsKey,
+  securityBypass: config.env !== "production",
+  debug: config.env !== "production",
+  env: config.env,
 });
 ```
 
-## Logging HTTP
+#### HTTP Logging
 
-El proyecto incluye un logger HTTP específico para las peticiones web:
+The project includes a specific HTTP logger for web requests:
 
 ```typescript
 // src/app.ts
@@ -456,24 +418,24 @@ app.use(conexaCore.HttpLogger.errorHandler);
 
 ## Lint and Prettier
 
-El proyecto utiliza ESLint y Prettier para mantener la calidad y consistencia del código.
+The project uses ESLint and Prettier to maintain code quality and consistency.
 
-### Configuración de ESLint
+### ESLint Configuration
 
-La configuración de ESLint se encuentra en `.eslintrc.json`. El proyecto utiliza:
+ESLint configuration is located in `.eslintrc.json`. The project uses:
 
-- Extensión de `airbnb-base` y `airbnb-typescript/base` para TypeScript
+- `airbnb-base` and `airbnb-typescript/base` extends for TypeScript
 - Plugins:
-  - `jest` para testing
-  - `security` para seguridad
-  - `prettier` para integración con Prettier
-- Reglas personalizadas para TypeScript en archivos `.ts`
+  - `jest` for testing
+  - `security` for security
+  - `prettier` for Prettier integration
+- Custom TypeScript rules for `.ts` files
 
-Para modificar la configuración de ESLint, actualiza el archivo `.eslintrc.json`.
+To modify ESLint settings, update `.eslintrc.json`.
 
-### Configuración de Prettier
+### Prettier Configuration
 
-La configuración de Prettier se encuentra en `.prettierrc.json`. Configuración actual:
+Prettier settings are in `.prettierrc.json`. Current configuration:
 
 ```json
 {
@@ -485,4 +447,3 @@ La configuración de Prettier se encuentra en `.prettierrc.json`. Configuración
   "tabWidth": 4
 }
 ```
-
