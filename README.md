@@ -1,12 +1,17 @@
-**Klaviyo-VTEX Integration**  
-This project is a backend integration that connects VTEX (e-commerce platform) with Klaviyo (email marketing and automation platform), enabling two-way data synchronization between the two platforms.
+![Logo](https://conexa.ai/wp-content/uploads/2021/03/logo.svg)
+
+# Wompi - VTEX - BANCOLOMBIA
+
+This is a backend payment connector that integrates VTEX e-commerce platform with Wompi (Bancolombia's payment processor) for processing bank transfers in Colombia.
+
+**Integration Docs**: [Wompi - Vtex - Bancolombia](https://https://docs.wompi.co/docs/colombia/wompi-vtex/)
 
 ## Table of Contents
 
 - [Tech Stack](#tech-stack)
 - [Environment Variables](#environment-variables)
 - [Installing Dependencies](#installing-dependencies)
-- [Docker Compose (Development)](#docker-compose-development)
+- [Docker Compose](#docker-compose)
 - [Running the Project](#running-the-project)
 - [Project Structure](#project-structure)
 - [API Endpoints](#api-endpoints)
@@ -19,62 +24,57 @@ This project is a backend integration that connects VTEX (e-commerce platform) w
 ---
 
 ## Tech Stack
-
-**Server:**
-
-- **Node.js** (v18, as per Dockerfile)
-- **Express.js** (Web framework)
-- **TypeScript** (Programming language)
-- **MongoDB** (Mongoose as ODM)
-
----
+Server: Node.js (see version in Dockerfile), Express.js, TypeScript, MongoDB (Mongoose)
+Payment Integration: Wompi SDK (Bancolombia payment processor), VTEX Payment Provider Interface
+Security & Middleware: Helmet, XSS protection, CORS, Express rate limiting, CryptoJS, Express MongoDB sanitize
+Logging & Monitoring: Winston, Conexa Core Server, Health checks
+Development Tools: ESLint, Prettier, Husky, Jest (testing), Supertest (API testing), Nock (HTTP mocking)
+Deployment: Docker, Docker Compose, GitLab CI/CD
 
 ## Environment Variables
-
-Configure the following variables in your environment (`.env`):
+The environment variables can be found and modified in the `.env.example` file. They come with these default values:
 
 ```bash
 PORT=5420
 NODE_ENV=development
-
-API_URL="https://localhost:$PORT"
-FRONTEND_URL="https://localhost:3000"
-KLAVIYO_API_URL=https://a.klaviyo.com/api
-
-CRYPTOJS_SECRET_KEY=123456
-
-MONGODB_URL=mongodb://127.0.0.1:27017/carrier-vtex
-
-JWT_SECRET=myVerySecretString
-
-NUMBER_OF_BATCH_FOR_ORDERS_CRON=20
-NUMBER_OF_BATCH_FOR_PRODUCTS_CRON=100
+API_URL=https://wompi-vtex-colombia-api-stage.conexa.ai/api/v1
+FRONTEND_URL=https://wompi-vtex-corresponsales-stage.conexa.ai/
+CRYPTOJS_SECRET_KEY=12345678
+MONGODB_URL=mongodb://127.0.0.1:27017/wompi-db
+#mongodb://localhost:27017/Wompi-Bancolombia
+VTEX_API_KEY=vtexappkey-wompi-FNEOVC
+VTEX_API_TOKEN=
+PRIVATE_KEY=
+MONITORING_TOKEN=
 ```
 
----
+| Environment Variable   | Description                                  | Default Value                                                                 |
+| ---------------------- | -------------------------------------------- | ----------------------------------------------------------------------------- |
+| `PORT`                 | The port number of the server                | `5420`                                                                        |
+| `NODE_ENV`             | The environment mode of the application      | `development`                                                                 |
+| `API_URL`              | The base URL of the API                      | `https://wompi-vtex-colombia-api-stage.conexa.ai/api/v1`                      |
+| `FRONTEND_URL`         | The URL of the frontend application          | `https://wompi-vtex-corresponsales-stage.conexa.ai/`                          |
+| `CRYPTOJS_SECRET_KEY`  | The secret key for CryptoJS operations       | `12345678`                                                                    |
+| `MONGODB_URL`          | The MongoDB connection string                | `mongodb://127.0.0.1:27017/wompi-db`                                          |
+| `VTEX_API_KEY`         | VTEX application API key                     | `vtexappkey-wompi-FNEOVC`                                                     |
+| `VTEX_API_TOKEN`       | VTEX application API token                   | ``                                                                            |
+| `PRIVATE_KEY`          | The client private key for Conexa Core       | ``                                                                            |
+| `MONITORING_TOKEN`     | The token for the monitoring service         | ``                                                                            |
 
 ## Installing Dependencies
 
-To install all dependencies, run:
-
 ```bash
-yarn install-all
+npm run install-all
 ```
 
----
+## Docker Compose
 
-## Docker Compose (Development)
+To run the project locally, you'll need MongoD. Below is an example `docker-compose.yml` for your local setup:
 
-To run the project locally, you'll need **MongoDB** and **Redis**. Below is an example `docker-compose.yml` for your local setup:
-
-> 📝 This file is not included in the repository. Create it manually based on your configuration.
+📝 This file is not included in the repository. Create it manually based on your configuration.
 
 ```yaml
-version: "3.9"
-
-networks:
-  klaviyovtex:
-    driver: overlay
+version: "3.8"
 
 services:
   mongodb:
@@ -82,368 +82,318 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - ./data/db:/data/db
+      - ./data:/data/db
 
-  redis:
-    image: redis:latest
+  mongo-express:
+    image: mongo-express
     ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-
-  app:
-    image: IMAGE_URI
-    working_dir: /opt/app
-    networks:
-      - klaviyovtex
-    ports:
-      - "9001:3000"
-
-volumes:
-  redis_data:
-    driver: local
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+    depends_on:
+      - mongodb
 ```
-
----
 
 ## Running the Project
 
 Start the servers in development mode:
 
 ```bash
-npm run start-dev
+npm run dev
 ```
-
----
 
 ## Project Structure
 
 ```
-.
-├── src/                              # Source files
-│   ├── config/                       # Configuration files
-│   ├── constants/                    # Constants
-│   ├── controllers/                  # Controllers
-│   ├── docs/                         # Documentation files
-│   ├── enums/                        # TypeScript enums
-│   ├── interfaces/                   # TypeScript interfaces
-│   ├── jobs/                         # Background jobs and cron tasks
-│   ├── lib/                          # Core libraries and utilities
-│   ├── middlewares/                  # Express middlewares
-│   ├── models/                       # Mongoose models
-│   ├── routes/                       # API routes
-│   ├── services/                     # Business logic services
-│   ├── tests/                        # Test files
-│   ├── utils/                        # Utility functions
-│   ├── validations/                  # Request validation schemas
-│   ├── app.ts                        # Express app configuration
+├── src                               # Source files
+│   ├── config                        # Configuration files
+│   │   ├── config.ts                 # Environment variables and app config
+│   │   ├── app.ts                    # App configuration
+│   │   └── paymentProvider.ts        # Payment provider settings
+│   ├── constants                     # Constants
+│   │   └── transaction.ts            # Transaction constants and mappings
+│   ├── controllers                   # Controllers
+│   │   ├── vtex.controller.ts        # VTEX payment endpoints
+│   │   ├── ipn.controller.ts         # Instant Payment Notification
+│   │   └── report.controller.ts      # Reports and monitoring
+│   ├── interfaces                    # TypeScript interfaces
+│   │   ├── payment.interface.ts      # Payment data structures
+│   │   ├── transaction.interface.ts  # Transaction models
+│   │   ├── user.interfaces.ts        # User data structures
+│   │   ├── webhook.interface.ts      # Webhook event interfaces
+│   │   └── reports.interface.ts      # Report data structures
+│   ├── lib                           # Library files
+│   │   └── ApiError.ts               # Custom error handling
+│   ├── middlewares                   # Middlewares
+│   │   └── error.middleware.ts       # Error handling middleware
+│   ├── models                        # Models (Mongoose)
+│   │   ├── Transaction.model.ts      # Transaction schema
+│   │   └── User.model.ts             # User schema
+│   ├── routes                        # Routes
+│   │   ├── index.routes.ts           # Main router configuration
+│   │   ├── vtex.routes.ts            # VTEX payment routes
+│   │   ├── ipn.routes.ts             # IPN webhook routes
+│   │   └── reports.routes.ts         # Report routes
+│   ├── services                      # Services
+│   │   ├── vtex.service.ts           # VTEX integration logic
+│   │   ├── wompi.service.ts          # Wompi SDK integration
+│   │   ├── transaction.service.ts    # Transaction database operations
+│   │   ├── user.service.ts           # User database operations
+│   │   └── reports.service.ts        # Report generation
+│   ├── tests                         # Tests
+│   │   ├── e2e                       # End-to-end tests
+│   │   ├── mocks                     # Test mocks and fixtures
+│   │   └── setupTestDB.ts            # Test database setup
+│   ├── utils                         # Utility functions
+│   │   ├── formatter.utils.ts        # Data formatting utilities
+│   │   ├── mapper.utils.ts           # Status mapping utilities
+│   │   ├── validation.utils.ts       # Validation helpers
+│   │   ├── lib.ts                    # General utilities
+│   │   └── reports.utils.ts          # Report utilities
+│   ├── docs                          # Documentation
+│   │   └── postman-collection.json   # API documentation
+│   ├── app.ts                        # Express App configuration
 │   ├── index.ts                      # Application entry point
 │   ├── custom.d.ts                   # Custom TypeScript declarations
-│   └── declaration.d.ts              # TypeScript declarations
-├── deployment/                       # Deployment configurations
-│   └── docker-compose.yml            # Production docker-compose
-├── dist/                             # Compiled JavaScript files
-├── .github/                          # GitHub configurations
-├── .husky/                           # Git hooks
-├── .vscode/                          # VS Code configurations
-├── docker-compose.yml                # Development docker-compose
-├── Dockerfile                        # Docker configuration
-├── Jenkinsfile                       # CI/CD pipeline configuration
-├── ecosystem.config.json             # PM2 configuration
-├── jest.config.cjs                   # Jest testing configuration
-├── package.json                      # Project dependencies and scripts
-├── tsconfig.json                     # TypeScript configuration
-├── .commitlintrc.json                # Commit linting rules
-├── .dockerignore                     # Docker ignore rules
-├── .editorconfig                     # Editor configuration
-├── .eslintignore                     # ESLint ignore rules
-├── .eslintrc.json                    # ESLint configuration
-├── .gitattributes                    # Git attributes
-├── .gitignore                        # Git ignore rules
-├── .lintstagedrc                     # Lint-staged configuration
-├── .npmrc                            # NPM configuration
-├── .prettierignore                   # Prettier ignore rules
-├── .prettierrc.json                  # Prettier configuration
-├── .versionrc                        # Version configuration
-├── CHANGELOG.md                      # Changelog
-├── README.md                         # Project documentation
-└── TODO.md                           # Project todos
+│   └── declaration.d.ts              # Type declarations
+└── README.md                         # Project documentation
 ```
-
----
 
 ## API Endpoints
 
 List of available routes (base path: `/api/v1`):
 
-### Auth Routes:
+**VTEX Payment Routes:**
 
-- `POST /auth/login` – User authentication
-- `POST /auth/refresh-token` – Refresh authentication token
+```bash
+POST /vtex/payments                    # Create payment transaction
+POST /vtex/payments/:payment_id/settlements    # Process settlement
+POST /vtex/payments/:payment_id/cancellations  # Cancel payment
+POST /vtex/payments/:payment_id/refunds        # Process refund
+```
 
-### Onboarding Routes:
+**IPN (Instant Payment Notification) Routes:**
 
-- `POST /onboarding/vtex` – VTEX integration setup
-- `GET /onboarding/vtex/sales-channel` – Get VTEX sales channels
-- `POST /onboarding/vtex/sales-channel` – Set VTEX sales channel
-- `GET /onboarding/timezone` – Get available timezones
-- `POST /onboarding/auth` – Authentication setup
-- `GET /onboarding/sync` – Get sync status
-- `POST /onboarding/resync` – Retry synchronization
+```bash
+GET  /ipn/async-payment-url/:id        # Get async payment URL
+POST /ipn/webhook                      # Handle Wompi webhook events
+```
 
-### Webhooks Routes:
+**Reports Routes:**
 
-- `POST /webhooks/vtex/orders` – Handle VTEX order webhooks
-- `POST /webhooks/vtex/products` – Handle VTEX product webhooks
+```bash
+GET  /reports/last-orders              # Get last orders
+GET  /reports/status-orders            # Get status orders
+```
 
-### Support Routes:
+**Health Check Routes:**
 
-- `GET /support/account-status` – Get account status
-
-### Jobs Routes:
-
-- `GET /jobs` – Get jobs status
-
-### Vitals Routes:
-
-- `GET /` – Health check endpoint
-
----
+```bash
+GET  /                                 # Health check
+GET  /health                           # Health check
+GET  /healthcheck                      # Health check
+GET  /health-check                     # Health check
+```
 
 ## Flow Diagrams
 
-### AUTH:
-
-```mermaid
-sequenceDiagram
-    actor User
-    participant Frontend
-    participant AuthService
-    participant Database
-
-    note over User,Frontend: Login Process
-    User->>Frontend: POST /auth/login
-    Frontend->>AuthService: Login Request
-    AuthService->>Database: Validate Credentials
-    Database-->>AuthService: User Data
-    AuthService-->>Frontend: JWT Token (24h)
-    Frontend-->>User: Authentication Success
-
-    note over User,Frontend: Protected Routes
-    User->>Frontend: Request Protected Resource
-    Frontend->>AuthService: Request with JWT
-    AuthService-->>Frontend: Protected Data
-    Frontend-->>User: Resource Data
-
-    note over User,Frontend: Token Refresh
-    User->>Frontend: Refresh Token Request
-    Frontend->>AuthService: Refresh JWT
-    AuthService-->>Frontend: New JWT Token
-    Frontend-->>User: New Token
-```
-
-### ONBOARDING:
-
-```mermaid
-sequenceDiagram
-    actor User
-    participant Onboarding
-    participant VTEX
-    participant Database
-    participant Klaviyo
-    participant Sync
-
-    note over User,Onboarding: VTEX Setup
-    User->>Onboarding: Submit VTEX Credentials
-    Onboarding->>VTEX: Validate Credentials
-    VTEX-->>Onboarding: Validation Result
-    Onboarding->>Database: Create User
-    Database-->>Onboarding: User Created
-
-    note over User,Onboarding: Klaviyo Setup
-   User->>Onboarding: Submit Klaviyo Keys
-    Onboarding->>Klaviyo: Validate Keys
-    Klaviyo-->>Onboarding: Validation Result
-
-    note over User,Onboarding: Sync Configuration
-    User->>Onboarding: Configure Sync Options
-    Note right of User: Products Sync<br/>Order Period (0/6/12 months)
-    Onboarding->>Sync: Initialize Sync
-
-    note over Sync: Parallel Sync Process
-    par Products
-        Sync->>Sync: Sync Products
-    and Orders
-        Sync->>Sync: Sync Orders
-    and Customers
-        Sync->>Sync: Sync Customers
-    end
-
-    note over User,Onboarding: Complete Setup
-    Sync-->>Onboarding: Sync Status
-    Onboarding-->>User: Setup Complete
-```
-
-### WEBHOOK:
+### Payments
 
 ```mermaid
 sequenceDiagram
     participant VTEX
-    participant Webhook
-    participant Processor
-    participant Klaviyo
+    participant Backend
+    participant Wompi
+    participant Database
 
-    note over VTEX,Webhook: Order Event
-    VTEX->>Webhook: Order Status Change
-    Webhook->>Processor: Process Order
+    note over VTEX,Backend: Payment Creation
+    VTEX->>Backend: POST /payments
+    note over VTEX,Backend: Payment data + credentials
 
-    note over Processor: Validation & Formatting
-    Processor->>Processor: Validate Sales Channel
-    Processor->>Processor: Format Prices & Data
+    Backend->>Wompi: Validate credentials
+    Wompi-->>Backend: OK
 
-    note over Processor,Klaviyo: Event Mapping
-    alt Order Status
-        Processor->>Klaviyo: Canceled Order
-    else
-        Processor->>Klaviyo: Invoiced Order
-    else
-        Processor->>Klaviyo: Ready to Ship
-    else
-        Processor->>Klaviyo: Placed Order
+    Backend->>Database: Create/Update user
+    Backend->>Database: Check if transaction exists
+
+    alt New transaction
+        Backend->>Wompi: Get acceptance token
+        Wompi-->>Backend: Token
+        Backend->>Backend: Generate signature
+        Backend->>Wompi: POST /transactions
+        Wompi-->>Backend: Transaction response
+        Backend->>Database: Save transaction
     end
 
-    note over Klaviyo,VTEX: Response
-    Klaviyo-->>VTEX: Event Tracked
+    Backend-->>VTEX: Response with payment URL
+
+    note over VTEX,Wompi: Asynchronous Payment Flow
+    VTEX->>Backend: GET /ipn/paymentUrl
+    Backend->>Wompi: Get payment URL
+    Wompi-->>Backend: async_payment_url
+    Backend-->>VTEX: Redirect to payment URL
+
+    note over Wompi,Backend: State Update
+    Wompi->>Backend: POST /ipn/event (webhook)
+    Backend->>Database: Update state
+    Backend->>VTEX: POST callback (new state)
 ```
 
----
+### Settlements
+
+```mermaid
+sequenceDiagram
+  participant VTEX
+  participant Backend
+  participant VTEXPackage
+
+  note over VTEX,Backend: Settlement Request
+  VTEX->>Backend: POST /payments/{payment_id}/settlements
+  Note over VTEX,Backend: Headers: x-vtex-api-appkey, x-vtex-api-apptoken<br/>Body: Settlement data (paymentId, settleId, value, etc.)
+
+  Backend->>VTEXPackage: settlementsPaymentResponse(req.body)
+  VTEXPackage-->>Backend: Formatted settlement response
+
+  Backend-->>VTEX: 200 OK - Settlement response
+  Note over Backend,VTEX: Response includes:<br/>- paymentId<br/>- settleId<br/>- code<br/>- message: "transaction settled"
+```
+
+### Cancellation
+
+```mermaid
+sequenceDiagram
+  participant VTEX
+  participant Backend
+  participant VTEXPackage
+
+  note over VTEX,Backend: Cancellation Request
+  VTEX->>Backend: POST /payments/{payment_id}/cancellations
+  Note over VTEX,Backend: Headers: x-vtex-api-appkey, x-vtex-api-apptoken<br/>Body: Cancellation data (paymentId, cancellationId, value, requestId)
+
+  Backend->>VTEXPackage: cancellationPaymentResponse(req.body)
+  VTEXPackage-->>Backend: Formatted cancellation response
+
+  Backend-->>VTEX: 501 - Manual cancellation required
+  Note over Backend,VTEX: Response includes:<br/>- paymentId<br/>- cancellationId: null<br/>- code: "cancel-manually"<br/>- message: "Cancellation should be done manually"
+```
+
+### Refunds
+
+```mermaid
+sequenceDiagram
+  participant VTEX
+  participant Backend
+  participant VTEXPackage
+
+  note over VTEX,Backend: Refund Request
+  VTEX->>Backend: POST /payments/{payment_id}/refunds
+  Note over VTEX,Backend: Headers: x-vtex-api-appkey, x-vtex-api-apptoken<br/>Body: Refund data (paymentId, refundId, value, requestId)
+
+  Backend->>VTEXPackage: refundPaymentResponse(req.body)
+  VTEXPackage-->>Backend: Formatted refund response
+
+  Backend-->>VTEX: 501 - Manual refund required
+  Note over Backend,VTEX: Response includes:<br/>- paymentId<br/>- refundId: null<br/>- code: "refund-manually"<br/>- message: "This payment needs to be manually refunded"
+```
 
 ## Middleware and Validations
+The project includes custom middleware to support authentication, request validation, error handling, and monitoring access control.
 
-### verifyToken Middleware
+- 🔐 **ReportMiddleware**  
+  Validates monitoring access using a Bearer token for report endpoints.  
+  Authorization: Bearer `<monitoring-token>`
 
-```typescript
-// src/middlewares/verifyToken.middleware.ts
-export const verifyToken: RequestHandler = (req, _res, next) => {
-  try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) throw new Error("Token not present in the request header.");
-
-    const decodedToken = jwt.verify(token, config.jwtSecret);
-    if (typeof decodedToken === "object") {
-      const content = decodedToken as IMiddlemanTokenContent;
-      req.userId = content.userId;
-    }
-    next();
-  } catch (error) {
-    next(
-      new ApiError(httpStatus.UNAUTHORIZED, "Authentication issue detected")
-    );
+  ```js
+  // Validates against config.api.monitoringToken
+  if (!authorization || authorization.split(' ')[1] !== config.api.monitoringToken) {
+    return res.sendStatus(httpStatus.UNAUTHORIZED);
   }
-};
-```
+  ```
+  Usage: Applied to `/api/v1/reports/*` endpoints for monitoring access control.
 
-### Validations
+- 🔓 **validateSource**  
+  Decrypts and validates transaction IDs from query parameters for IPN endpoints.  
+  Query Parameter: `tid=<encrypted-transaction-id>`
 
-#### Auth Validations
+  ```js
+  // Decrypts the tid parameter and attaches to req.headers['id']
+  const decryptedId = decryptData<string>(id);
+  req.headers['id'] = decryptedId.data;
+  ```
+  Usage: Applied to IPN endpoints for secure transaction identification.
 
-```typescript
-// src/validations/auth.validation.ts
-export const login = {
-  body: Joi.object().keys({
-    // ... validation schema for login
-  }),
-};
-```
+- 🛡️ **decryptRequestMiddleware** (from `conexa-core-server`)  
+  External middleware from the Conexa Core Server library for request decryption.  
+  Usage: Applied to routes with `security: true` flag in route configuration.
 
-... (remaining parts unchanged) ...
+- ⚠️ **errorConverter**  
+  Converts various error types to standardized ApiError format with proper HTTP status codes.  
+  **Features:**
+  - Converts Mongoose errors to `400 Bad Request`
+  - Handles validation errors with message cleanup
+  - Generates error codes from error messages
+  - Preserves stack traces in development
+
+- 🚨 **errorHandler**  
+  Handles final error responses with environment-specific behavior.  
+  **Features:**
+  - Masks internal errors in production
+  - Includes stack traces in development
+  - Standardizes error response format
+  - Logs errors in development mode
+
+- 🔧 **Global Security Middleware**  
+  Applied globally in `app.ts`:  
+  - `helmet`: Security HTTP headers  
+  - `cors`: Cross-origin resource sharing  
+  - `xss`: XSS protection  
+  - `express-mongo-sanitize`: MongoDB injection protection  
+  - `compression`: Gzip compression  
+  - `HttpLogger`: Request/response logging (non-test environments)
+
+🔄 **Middleware Application Flow**
+1. Global Security Middleware (`app.ts`)
+2. Route-specific Middleware (based on route configuration)
+3. Controller Logic
+4. Error Conversion (`errorConverter`)
+5. Error Handling (`errorHandler`)
+
+📍 **Route Middleware Mapping**
+
+| Route                | Middleware Applied           |
+| -------------------- | ---------------------------- |
+| `/api/v1/vtex/*`     | None (public endpoints)      |
+| `/api/v1/ipn/*`      | `validateSource`             |
+| `/api/v1/reports/*`  | `ReportMiddleware`           |
+| Secure routes        | `decryptRequestMiddleware`   |
 
 ## Logging
 
-### Logging System
+Import the logger from `conexa-core-server`. It uses the Winston logging library.
 
-The project uses the logging system from `conexa-core-server`, which is based on the [Winston](https://github.com/winstonjs/winston) library.
+```js
+import { Logger } from 'conexa-core-server';
 
-#### Logger Import
-
-```typescript
-import { Logger } from "conexa-core-server";
+Logger.error('message'); // level 0
+Logger.warn('message');  // level 1
+Logger.info('message');  // level 2
+Logger.http('message');  // level 3
+Logger.verbose('message'); // level 4
+Logger.debug('message'); // level 5
 ```
 
-#### Severity Levels
-
-```typescript
-Logger.error("message"); // level 0 - Critical errors
-Logger.warn("message"); // level 1 - Warnings
-Logger.info("message"); // level 2 - General information
-Logger.http("message"); // level 3 - HTTP request logs
-Logger.verbose("message"); // level 4 - Detailed information
-Logger.debug("message"); // level 5 - Debugging information
-```
-
-#### Modes of Operation
-
-##### Development Mode
-
-In development mode (`NODE_ENV=development`), all log levels are printed to the console.
-
-##### Production Mode
-
-In production mode (`NODE_ENV=production`), only info, warn, and error levels are printed to the console.
-
-#### Configuration
-
-The logging system is configured automatically based on the environment:
-
-```typescript
-// src/app.ts
-conexaCore.configure({
-  secretKey: config.cryptojsKey,
-  securityBypass: config.env !== "production",
-  debug: config.env !== "production",
-  env: config.env,
-});
-```
-
-#### HTTP Logging
-
-The project includes a specific HTTP logger for web requests:
-
-```typescript
-// src/app.ts
-app.use(conexaCore.HttpLogger.errorHandler);
-```
-
----
+In development mode, log messages of all severity levels are printed to the console.  
+In production mode, only `info`, `warn`, and `error` logs are printed.
 
 ## Lint and Prettier
 
-The project uses ESLint and Prettier to maintain code quality and consistency.
+Linting is done using ESLint and Prettier.
 
-### ESLint Configuration
+To modify the ESLint configuration, update the `.eslintrc.js` file.  
+To modify the Prettier configuration, update the `.prettierrc.json` file.  
 
-ESLint configuration is located in `.eslintrc.json`. The project uses:
+To prevent files or directories from being linted, add them to `.eslintignore` and `.prettierignore`.
 
-- `airbnb-base` and `airbnb-typescript/base` extends for TypeScript
-- Plugins:
-  - `jest` for testing
-  - `security` for security
-  - `prettier` for Prettier integration
-- Custom TypeScript rules for `.ts` files
+## License
 
-To modify ESLint settings, update `.eslintrc.json`.
-
-### Prettier Configuration
-
-Prettier settings are in `.prettierrc.json`. Current configuration:
-
-```json
-{
-  "parser": "typescript",
-  "singleQuote": true,
-  "trailingComma": "all",
-  "printWidth": 110,
-  "endOfLine": "auto",
-  "tabWidth": 4
-}
-```
+[CONEXA]
