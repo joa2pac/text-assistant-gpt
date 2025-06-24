@@ -1,10 +1,10 @@
 ![Logo](https://conexa.ai/wp-content/uploads/2021/03/logo.svg)
 
-# Wompi - VTEX - NEQUI
+# Wompi PSE - VTEX
 
-This is a backend payment connector that integrates VTEX e-commerce platform with Wompi (Bancolombia's payment processor) for processing bank transfers in Colombia.
+Middleman that integrates Wompi PSE payments with VTEX ecommerce
 
-**Integration Docs**: [Wompi - Vtex - Nequi](https://docs.wompi.co/)
+**Integration Docs**: [Wompi - Vtex - PSE](https://docs.wompi.co/)
 
 ## Table of Contents
 
@@ -25,43 +25,51 @@ This is a backend payment connector that integrates VTEX e-commerce platform wit
 
 ## Tech Stack
 
-| Category                  | Technologies                                                               |
-| ------------------------- | -------------------------------------------------------------------------- |
-| **Server**                | Node.js (v16-alpine), Express.js, MongoDB (Mongoose)                       |
-| **Payment Integration**   | Wompi API (Bancolombia), VTEX Payment Provider Interface                   |
-| **Security & Middleware** | CORS, Crypto (Node.js built-in), Express JSON parsing                      |
-| **Logging & Monitoring**  | Winston, Health Checks                                                     |
-| **Development Tools**     | Jest (unit testing), Supertest (API testing), Nock (HTTP mocking), Nodemon |
-| **Deployment**            | Docker, Kubernetes (Helm charts)                                           |
+| Category                  | Technologies                                                                     |
+| ------------------------- | -------------------------------------------------------------------------------- |
+| **Server**                | Node.js (v16-alpine), Express.js, MongoDB (Mongoose)                             |
+| **Payment Integration**   | Wompi API , VTEX Payment Provider Interface, Axios for HTTP requests             |
+| **Security & Middleware** | Crypto (SHA256 hashing), Express JSON parsing, Environment variables (dotenv)    |
+| **Logging & Monitoring**  | Winston (structured logging), Health check endpoints, Request timing middleware  |
+| **Development Tools**     | Jest (unit & integration testing), Nock (HTTP mocking), Nodemon (development)    |
+| **Deployment**            | Docker (Node.js 16-alpine), Helm Charts (Kubernetes), Multi-environment configs  |
+|                           | (stage/prod)                                                                     |
+| **Database**              | MongoDB with Mongoose ODM, Indexed collections for transactions and users        |
+| **Utilities**             | Country ISO conversion, Request timing middleware, Custom business logic modules |
 
 ## Environment Variables
 
 The environment variables can be found and modified in the `.env.example` file. They come with these default values:
 
 ```bash
-APP_PORT=5420
-APP_URL=https://wompi-vtex-nequi-api.conexa.ai
+APP_PORT=2222
+NODE_ENV=dev
 
-VTEX_URL=https://wompi.myvtex.com/
-VTEX_APPKEY=vtexappkey-wompi-TLTBUI
-VTEX_TOKEN=XNIVVSZNEBTYITACKAIOQVLHGVZIQHIQVGLHNSDPCEBYPGNOLNXYBUCWJYBLBVQMPYMZZTWPQGTUGDDGAKKPLHIUSQLTORXCIGPZOCEACVMQNPTJFUHSGYIJTHGJJXOM
-DB_URL=mongodb://127.0.0.1:27017/wompi-db
+APP_URL=https://wompi-vtex-pse-api-stage.conexa.ai
+
+DB_URL=
 
 WOMPI_URL=https://sandbox.wompi.co/v1
+GET_BANKS_TOKEN=
 
+WOMPI_PUBLIC_KEY=
+
+VTEX_URL=https://wompi.myvtex.com/
+VTEX_APPKEY=
+VTEX_TOKEN=
 MONITORING_TOKEN=
 ```
 
-| Environment Variable | Description                   | Default Value                            |
-| -------------------- | ----------------------------- | ---------------------------------------- |
-| `APP_PORT`           | The port number of the server | `5420`                                   |
-| `APP_URL`            | The base URL of the API       | `https://wompi-vtex-nequi-api.conexa.ai` |
-| `VTEX_URL`           | The base URL for VTEX         | `https://wompi.myvtex.com/`              |
-| `VTEX_APPKEY`        | VTEX application API key      | `vtexappkey-wompi-TLTBUI`                |
-| `VTEX_TOKEN`         | VTEX application API token    | `XNIVVSZNEBTY…`                          |
-| `DB_URL`             | MongoDB connection string     | `mongodb://127.0.0.1:27017/wompi-db`     |
-| `WOMPI_URL`          | The base URL of the Wompi API | `https://sandbox.wompi.co/v1`            |
-| `MONITORING_TOKEN`   | Monitoring service token      |                                          |
+| Environment Variable | Description                   | Default Value                                |
+| -------------------- | ----------------------------- | -------------------------------------------- |
+| `APP_PORT`           | The port number of the server | `2222`                                       |
+| `APP_URL`            | The base URL of the API       | `https://wompi-vtex-pse-api-stage.conexa.ai` |
+| `VTEX_URL`           | The base URL for VTEX         | `https://wompi.myvtex.com/`                  |
+| `VTEX_APPKEY`        | VTEX application API key      | ``                                           |
+| `VTEX_TOKEN`         | VTEX application API token    | ``                                           |
+| `DB_URL`             | MongoDB connection string     | `mongodb://127.0.0.1:27017/wompi-db`         |
+| `WOMPI_URL`          | The base URL of the Wompi API | `https://sandbox.wompi.co/v1`                |
+| `MONITORING_TOKEN`   | Monitoring service token      |                                              |
 
 ## Installing Dependencies
 
@@ -107,95 +115,98 @@ npm run dev
 ## Project Structure
 
 ```
-├── automation/                        # Kubernetes deployment files
-│   ├── templates/                     # Helm chart templates
-│   │   ├── deployment.yaml            # Kubernetes deployment configuration
-│   │   ├── hpa.yaml                   # Horizontal Pod Autoscaler
-│   │   ├── ingress.yaml               # Ingress configuration
-│   │   └── service.yaml               # Service configuration
-│   ├── Chart.yaml                     # Helm chart metadata
-│   ├── values-prod.yaml               # Production environment values
-│   └── values-stage.yaml              # Staging environment values
-├── src/                               # Source files
-│   ├── businessProcess/               # Business logic layer
-│   │   ├── db.bussines.js             # Database operations
-│   │   ├── reports.service.js         # Report generation service
-│   │   ├── utils.bussines.js          # Business utilities
-│   │   ├── vtex.bussines.js           # VTEX integration logic
-│   │   └── wompi.bussines.js          # Wompi payment integration
-│   ├── controllers/                   # Controllers
-│   │   ├── ipn.controller.js          # Instant Payment Notification
-│   │   ├── reports.controller.js      # Reports and monitoring
-│   │   └── vtex-payments.controller.js # VTEX payment endpoints
-│   ├── middleware/                    # Middlewares
-│   │   ├── currency.js                # Currency handling middleware
-│   │   └── report.js                  # Report middleware
-│   ├── models/                        # Models (Mongoose)
-│   │   ├── Transaction.model.js       # Transaction schema
-│   │   └── User.model.js              # User schema
-│   ├── paymentProvider/               # Payment provider configuration
-│   │   └── paymentProvider.js         # Payment provider settings
-│   ├── routes/                        # Routes
-│   │   ├── index.routes.js            # Main router configuration
-│   │   ├── ipn.routes.js              # IPN webhook routes
-│   │   ├── reports.routes.js          # Report routes
-│   │   └── vtex-payments.routes.js    # VTEX payment routes
-│   ├── tests/                         # Tests
-│   │   ├── integration/               # Integration tests
+├── src                               # Source files
+│   ├── app.js                        # Express App configuration
+│   ├── server.js                     # Application entry point
+│   ├── config                        # Configuration files
+│   │   ├── enviroment.js             # Environment variables and app config
+│   │   └── paymentProvider.js        # Payment provider settings
+│   ├── businessProcess               # Business logic layer
+│   │   ├── db.businessProcess.js     # Database operations
+│   │   ├── reports.service.js        # Report generation service
+│   │   ├── vtex.bussines.js          # VTEX integration logic
+│   │   └── wompi.bussines.js         # Wompi API integration
+│   ├── controllers                   # Controllers
+│   │   ├── ipn.controller.js         # Instant Payment Notification
+│   │   ├── payments.controller.js    # Payment processing endpoints
+│   │   ├── reports.controller.js     # Reports and monitoring
+│   │   └── vitals.controller.js      # Health check endpoints
+│   ├── middlewares                   # Middlewares
+│   │   ├── currency.js               # Currency handling middleware
+│   │   ├── report.js                 # Report middleware
+│   │   └── timing.js                 # Request timing middleware
+│   ├── models                        # Models (Mongoose)
+│   │   ├── Transaction.model.js      # Transaction schema
+│   │   └── User.model.js             # User schema
+│   ├── routes                        # Routes
+│   │   ├── index.routes.js           # Main router configuration
+│   │   ├── ipn.routes.js             # IPN webhook routes
+│   │   ├── reports.routes.js         # Report routes
+│   │   ├── vitals.routes.js          # Health check routes
+│   │   └── vtex.routes.js            # VTEX payment routes
+│   ├── tests                         # Tests
+│   │   ├── integration               # Integration tests
 │   │   │   └── endToend.process.test.js # End-to-end tests
-│   │   ├── mocks/                     # Test mocks and fixtures
-│   │   │   ├── credentials.js         # Mock credentials
-│   │   │   ├── mockWompiApi.js        # Mock Wompi API responses
-│   │   │   ├── mockWompiResponse.js   # Mock Wompi responses
-│   │   │   └── vtexPaymentData.js     # Mock VTEX payment data
-│   │   ├── unit/                      # Unit tests
-│   │   │   ├── businessProcess/       # Business logic tests
-│   │   │   └── controllers/           # Controller tests
-│   │   └── setEnvVars.js              # Test environment setup
-│   ├── utils/                         # Utility functions
-│   │   ├── constants/                 # Constants
-│   │   │   └── enviroment.js          # Environment variables
-│   │   ├── logger.js                  # Winston logging configuration
-│   │   ├── reports.js                 # Report utilities
-│   │   ├── utils.js                   # General utilities
-│   │   └── vtex.js                    # VTEX utilities
-│   ├── app.js                         # Express App configuration
-│   └── server.js                      # Application entry point
-├── Dockerfile                         # Docker container configuration
-├── jest.config.js                     # Jest testing configuration
-├── package.json                       # Node.js dependencies and scripts
-├── package-lock.json                  # Dependency lock file
-├── readme.md                          # Project documentation
-├── README2.md                         # Additional documentation
-└── .gitignore                         # Git ignore patterns
+│   │   ├── mocks                     # Test mocks and fixtures
+│   │   │   ├── credentials.js        # Mock credentials
+│   │   │   ├── mockWompiApi.js       # Wompi API mocks
+│   │   │   ├── mockWompiResponse.js  # Wompi response mocks
+│   │   │   └── vtexPaymentData.js    # VTEX payment data mocks
+│   │   ├── unit                      # Unit tests
+│   │   │   ├── businessProcess       # Business logic tests
+│   │   │   │   ├── db.bussines.test.js # Database tests
+│   │   │   │   └── wompi.bussines.test.js # Wompi integration tests
+│   │   │   └── controllers           # Controller tests
+│   │   │       ├── ipn.controller.test.js # IPN controller tests
+│   │   │       └── vtex-payments.controller.test.js # VTEX controller tests
+│   │   └── setEnvVars.js             # Test environment setup
+│   └── utils                         # Utility functions
+│       ├── logger.js                 # Winston logging configuration
+│       ├── reports.js                # Report utilities
+│       └── utils.js                  # General utilities
+├── Dockerfile                        # Docker container configuration
+├── jest.config.js                    # Jest testing configuration
+├── package.json                      # Project dependencies and scripts
+├── package-lock.json                 # Dependency lock file
+└── README.md                         # Project documentation
 ```
 
 ## API Endpoints
 
-List of available routes (base path: `/`):
+List of available routes (base path: `/api/v1`):
 
 **VTEX Payment Routes:**
 
-````bash
+```bash
 GET  /vtex/manifest                    # Get payment provider manifest
 GET  /vtex/payment-methods             # Get available payment methods
 POST /vtex/payments                    # Create payment transaction
 POST /vtex/payments/:payment_id/settlements    # Process settlement
 POST /vtex/payments/:payment_id/cancellations  # Cancel payment
 POST /vtex/payments/:payment_id/refunds        # Process refund
+GET  /vtex/banks                       # Get available banks
+POST /vtex/payments/delay              # Simulate delayed callback response
+```
 
 **IPN (Instant Payment Notification) Routes:**
 
 ```bash
 POST /ipn/event                        # Handle Wompi webhook events
-````
+```
 
 **Reports Routes:**
 
 ```bash
-GET  /reports/last-orders              # Get last orders
-GET  /reports/status-orders            # Get status orders
+GET  /reports/last-orders              # Get last orders (requires monitoring token)
+GET  /reports/status-orders            # Get status orders (requires monitoring token)
 GET  /reports/client/health            # Client health check
+```
+
+**Vitals Routes:**
+
+```bash
+GET  /vitals/ping                      # Service ping
+GET  /vitals/dbcheck                   # Database connectivity check
 ```
 
 **Health Check Routes:**
@@ -203,8 +214,8 @@ GET  /reports/client/health            # Client health check
 ```bash
 GET  /                                 # Health check
 GET  /health                           # Health check
-GET  /healthcheck                      # Health check
 GET  /health-check                     # Health check
+GET  /healthcheck                      # Health check
 ```
 
 ## Flow Diagrams
@@ -212,7 +223,7 @@ GET  /health-check                     # Health check
 ### Payments
 
 ```mermaid
-sequenceDiagram
+    sequenceDiagram
     actor Customer
     participant VTEX
     participant Middleman
@@ -220,111 +231,143 @@ sequenceDiagram
     participant Wompi
 
     note over Customer,VTEX: Payment Initiation
-    Customer->>VTEX: Select Nequi Payment
-    VTEX->>Middleman: POST /payments (payment data)
-    Middleman->>Middleman: Validate Currency (COP)
+    Customer->>VTEX: Select PSE Payment
+    VTEX->>Middleman: POST /vtex/payments
+    Middleman->>Middleman: Timing & Currency Validation
 
     note over Middleman,Database: Check Existing Transaction
-    Middleman->>Database: Find Transaction by vtexPaymentId
-    Database-->>Middleman: Transaction Status
-
+    Middleman->>Database: Find Transaction by paymentId
     alt Transaction Exists
-        Middleman-->>VTEX: Return Existing Status
+        Database-->>Middleman: Return Existing Status
+        Middleman-->>VTEX: Return Cached Response
     else New Transaction
-        note over Middleman,Wompi: Get Wompi Credentials
-        Middleman->>Middleman: Extract Wompi Keys (Headers/MerchantData)
-        Middleman->>Wompi: GET /merchants/{publicKey}
-        Wompi-->>Middleman: Access Token
-
-        note over Middleman,Database: User Management
-        Middleman->>Database: Find/Create User (merchantName, keys)
-        Database-->>Middleman: User Data
-
-        note over Middleman,Wompi: Create Payment Intention
-        Middleman->>Middleman: Build Wompi Payment Object
-        Middleman->>Wompi: POST /transactions (payment data)
-        Wompi-->>Middleman: Payment Response + Redirect URL
-
-        note over Middleman,Database: Save Transaction
-        Middleman->>Database: Create Transaction Record
-        Database-->>Middleman: Transaction Saved
-
-        note over Middleman,VTEX: Return Payment URL
-        Middleman-->>VTEX: Payment URL + Callback Info
-        VTEX-->>Customer: Redirect to Nequi Payment
+        Database-->>Middleman: No Transaction Found
     end
 
-    note over Customer,Wompi: Payment Completion
-    Customer->>Wompi: Complete Payment (Nequi App)
-    Wompi->>Wompi: Process Payment
+    note over Middleman: Merchant Validation
+    Middleman->>Middleman: Extract Merchant Data
+    Middleman->>Middleman: Validate Wompi Keys (Prod/Sandbox)
+    alt Invalid Keys
+        Middleman-->>VTEX: Return Denied Response
+    end
 
-    note over Wompi,Middleman: Payment Notification (IPN)
-    Wompi->>Middleman: POST /ipn (transaction status)
-    Middleman->>Database: Update Transaction Status
-    Middleman->>VTEX: POST callbackUrl (final status)
-    VTEX-->>Customer: Payment Confirmation
+    note over Middleman,Wompi: Authentication
+    Middleman->>Wompi: GET /merchants/{publicKey}
+    Wompi-->>Middleman: Return Access Token
+    alt No Access Token
+        Middleman-->>VTEX: Return Denied Response
+    end
+
+    note over Middleman,Database: User Management
+    Middleman->>Database: Find or Create User
+    Database-->>Middleman: Return User Data
+
+    note over Middleman: Payment Object Creation
+    Middleman->>Middleman: Build Wompi Payment Object
+    Middleman->>Wompi: GET /pse/financial_institutions
+    Wompi-->>Middleman: Return Bank List
+
+    note over Middleman,Wompi: Payment Processing
+    Middleman->>Wompi: POST /transactions
+    Wompi-->>Middleman: Return Payment Response
+
+    note over Middleman: Response Handling
+    alt Payment Declined
+        Middleman->>Database: Create Transaction (DENIED)
+        Middleman-->>VTEX: Return Denied Response
+    else Async Payment Required
+        Middleman->>Database: Create Transaction (PENDING)
+        Middleman-->>VTEX: Return Redirect URL
+    else Payment Approved
+        Middleman->>Database: Create Transaction (APPROVED)
+        Middleman->>VTEX: POST Callback with Status
+    end
+
+    note over VTEX,Customer: Payment Completion
+    VTEX-->>Customer: Show Payment Result
 ```
 
 ### Settlements
 
 ```mermaid
 sequenceDiagram
-  participant VTEX
-  participant Middleman
-  participant VTEXPackage
+    participant VTEX
+    participant Middleman
+    participant VTEXPackage
 
-  note over VTEX,Middleman: Settlement Request
-  VTEX->>Middleman: POST /payments/{payment_id}/settlements
-  Note over VTEX,Middleman: Headers: x-vtex-api-appkey, x-vtex-api-apptoken<br/>Body: Settlement data (paymentId, settleId, value, etc.)
+    note over VTEX,Middleman: Settlement Request
+    VTEX->>Middleman: POST /vtex/payments/{payment_id}/settlements
+    Note over VTEX,Middleman: Headers: x-vtex-api-appkey, x-vtex-api-apptoken<br/>Body: Settlement data (paymentId, settleId, value, etc.)
 
-  Middleman->>VTEXPackage: settlementsPaymentResponse(req.body)
-  VTEXPackage-->>Middleman: Formatted settlement response
+    note over Middleman: Settlement Processing
+    Middleman->>VTEXPackage: settlementsPaymentResponse(req.body)
+    VTEXPackage-->>Middleman: Formatted settlement response
 
-  Middleman-->>VTEX: 200 OK - Settlement response
-  Note over Middleman,VTEX: Response includes:<br/>- paymentId<br/>- settleId<br/>- code<br/>- message: "transaction settled"
+    note over Middleman: Response Handling
+    alt Success
+        Middleman-->>VTEX: 200 OK - Settlement response
+        Note over Middleman,VTEX: Response includes:<br/>- paymentId<br/>- settleId<br/>- code<br/>- message: "transaction settled"
+    else Error
+        Middleman-->>VTEX: 500 Error - Settlement failed
+        Note over Middleman,VTEX: Error response with:<br/>- paymentId<br/>- message: "Settlement has failed due to an internal error"
+    end
 ```
 
 ### Cancellation
 
 ```mermaid
 sequenceDiagram
-  participant VTEX
-  participant Middleman
-  participant VTEXPackage
+    participant VTEX
+    participant Middleman
+    participant VTEXPackage
 
-  note over VTEX,Middleman: Cancellation Request
-  VTEX->>Middleman: POST /payments/{payment_id}/cancellations
-  Note over VTEX,Middleman: Headers: x-vtex-api-appkey, x-vtex-api-apptoken<br/>Body: Cancellation data (paymentId, cancellationId, value, requestId)
+    note over VTEX,Middleman: Cancellation Request
+    VTEX->>Middleman: POST /vtex/payments/{payment_id}/cancellations
+    Note over VTEX,Middleman: Headers: x-vtex-api-appkey, x-vtex-api-apptoken<br/>Body: Cancellation data (paymentId, message, code, etc.)
 
-  Middleman->>VTEXPackage: cancellationPaymentResponse(req.body, null)
-  VTEXPackage-->>Middleman: Formatted cancellation response
+    note over Middleman: Cancellation Processing
+    Middleman->>VTEXPackage: cancellationPaymentResponse(req.body, null)
+    VTEXPackage-->>Middleman: Formatted cancellation response with status
 
-  Middleman-->>VTEX: 501 - Manual cancellation required
-  Note over Middleman,VTEX: Response includes:<br/>- paymentId<br/>- cancellationId: null<br/>- code: "cancel-manually"<br/>- message: "Cancellation should be done manually"
+    note over Middleman: Response Handling
+    alt Success (Manual Cancellation)
+        Middleman-->>VTEX: 501 Not Implemented - Manual cancellation required
+        Note over Middleman,VTEX: Response includes:<br/>- paymentId<br/>- code: "cancel-manually"<br/>- message: "Cancellation should be done manually"<br/>- cancellationId: null
+    else Error
+        Middleman-->>VTEX: 500 Error - Cancellation failed
+        Note over Middleman,VTEX: Error response with:<br/>- paymentId<br/>- message: "Cancellation has failed due to an internal error"
+    end
 ```
 
 ### Refunds
 
 ```mermaid
 sequenceDiagram
-  participant VTEX
-  participant Middleman
-  participant VTEXPackage
+    participant VTEX
+    participant Middleman
+    participant VTEXPackage
 
-  note over VTEX,Middleman: Refund Request
-  VTEX->>Middleman: POST /payments/{payment_id}/refunds
-  Note over VTEX,Middleman: Headers: x-vtex-api-appkey, x-vtex-api-apptoken<br/>Body: Refund data (paymentId, refundId, value, requestId)
+    note over VTEX,Middleman: Refund Request
+    VTEX->>Middleman: POST /vtex/payments/{payment_id}/refunds
+    Note over VTEX,Middleman: Headers: x-vtex-api-appkey, x-vtex-api-apptoken<br/>Body: Refund data (paymentId, value, message, etc.)
 
-  Middleman->>VTEXPackage: refundPaymentResponse(req.body, null)
-  VTEXPackage-->>Middleman: Formatted refund response
+    note over Middleman: Refund Processing
+    Middleman->>VTEXPackage: refundPaymentResponse(req.body, null)
+    VTEXPackage-->>Middleman: Formatted refund response with status
 
-  Middleman-->>VTEX: 501 - Manual refund required
-  Note over Middleman,VTEX: Response includes:<br/>- paymentId<br/>- refundId: null<br/>- code: "refund-manually"<br/>- message: "Refund should be done manually"
+    note over Middleman: Response Handling
+    alt Success (Manual Refund)
+        Middleman-->>VTEX: 501 Not Implemented - Manual refund required
+        Note over Middleman,VTEX: Response includes:<br/>- paymentId<br/>- code: "refund-manually"<br/>- message: "This payment needs to be manually refunded"<br/>- refundId: null<br/>- value: 0
+    else Error
+        Middleman-->>VTEX: 500 Error - Refund failed
+        Note over Middleman,VTEX: Error response with:<br/>- paymentId<br/>- message: "Refund has failed due to an internal error"
+    end
 ```
 
 ## Middleware and Validations
 
-The project includes custom middleware to support authentication, request validation, error handling, and monitoring access control.
+The project includes custom middleware to support request validation, monitoring access control, and performance tracking.
 
 - 🔐 **ReportMiddleware**  
   Validates monitoring access using a Bearer token for report endpoints.  
@@ -337,70 +380,92 @@ The project includes custom middleware to support authentication, request valida
   }
   ```
 
-  Usage: Applied to `/reports/*` endpoints for monitoring access control.
+  Usage: Applied to `/api/v1/reports/*` endpoints for monitoring access control.
 
 - 💰 **CurrencyMiddleware**  
-  Validates that payment requests use Colombian Peso (COP) currency.  
-  Request Body Validation: `currency === 'COP'`
+  Validates that payment transactions use Colombian Peso (COP) currency.  
+  Request Body: `{ currency: "COP" }`
 
   ```js
-  // Validates currency in request body
+  // Validates currency is COP for payment requests
   if (currency !== 'COP') {
-  	logger.warn(`Payment ID ${paymentId} is not a valid currency: ${currency}`);
-  	return res.status(200).json(getResponseVtexDenied({ message: "The currency must be 'COP'" }, paymentId));
+  	return res.status(200).json(
+  		getResponseVtexDenied(
+  			{
+  				message: "The currency must be 'COP'"
+  			},
+  			paymentId
+  		)
+  	);
   }
   ```
 
-  Usage: Applied to `/vtex/payments` endpoint for currency validation.
+  Usage: Applied to `/api/v1/vtex/payments` endpoint for currency validation.
 
-- 🔧 **Global Security Middleware**  
+- ⏱️ **TimingMiddleware**  
+  Tracks request processing time and handles timeout scenarios for payment requests.  
+  Features:
+
+  - Measures request duration
+  - Logs processing time
+  - Handles 35-second timeout scenarios
+  - Triggers timeout flow for long-running requests
+
+  ```js
+  // Tracks request timing and handles timeouts
+  const startTime = Date.now();
+  const checkResponseTimeout = async () => {
+  	const elapsedTime = Date.now() - startTime;
+  	if (elapsedTime >= 35000) {
+  		// Handle timeout scenario
+  	}
+  };
+  ```
+
+  Usage: Applied to `/api/v1/vtex/payments` endpoint for performance monitoring.
+
+- 🔧 **Global Middleware**  
   Applied globally in `app.js`:
-
-  - `cors`: Cross-origin resource sharing
-  - `express.json`: JSON body parsing with 50MB limit
-  - `express.urlencoded`: URL-encoded body parsing with 50MB limit
-
-- ⚠️ **Error Handling**  
-  Handles errors throughout the application with standardized error responses.  
-  **Features:**
-
-  - Custom error formatting for Wompi API responses
-  - Standardized error message mapping
-  - HTTP status code handling
-  - Error logging with Winston logger
-
-- 🔍 **Validation Functions**  
-  Business logic validation utilities in `utils.bussines.js`:
-  - `validateAlphanumeric`: Regex validation for alphanumeric strings
-  - `validatePaymentData`: Validates user, password, and storeId presence
-  - `encryptPassword`/`decryptPassword`: Base64 encoding/decoding utilities
+  - `express.json()`: JSON request body parsing
+  - Health check endpoints: `/`, `/health`, `/health-check`, `/healthcheck`
 
 🔄 **Middleware Application Flow**
 
-1. Global Security Middleware (`app.js`)
+1. Global Middleware (`app.js`)
 2. Route-specific Middleware (based on route configuration)
 3. Controller Logic
-4. Error Handling (try-catch blocks in controllers)
+4. Response handling
 
 📍 **Route Middleware Mapping**
 
-| Route            | Middleware Applied                   |
-| ---------------- | ------------------------------------ |
-| `/vtex/*`        | `currencyMiddleware` (payments only) |
-| `/ipn/*`         | None (public webhook endpoints)      |
-| `/reports/*`     | `reportMiddleware`                   |
-| Health endpoints | None (public health checks)          |
+| Route                    | Middleware Applied                       |
+| ------------------------ | ---------------------------------------- |
+| `/api/v1/vtex/payments`  | `timingMiddleware`, `currencyMiddleware` |
+| `/api/v1/vtex/*` (other) | None (public endpoints)                  |
+| `/api/v1/ipn/*`          | None (webhook endpoints)                 |
+| `/api/v1/reports/*`      | `reportMiddleware`                       |
+| `/api/v1/vitals/*`       | None (health check endpoints)            |
+
+🔍 **Middleware Configuration**
+
+- **ReportMiddleware**: Uses `MONITORING_TOKEN` environment variable
+- **CurrencyMiddleware**: Enforces COP currency for Colombian payments
+- **TimingMiddleware**: 35-second timeout threshold for payment processing
+- **Global Middleware**: Basic Express.js setup with health checks
 
 ## Logging
 
-Import the logger from the local `utils/logger.js` module. It uses the Winston logging library with custom formatting.
+Import the logger from `conexa-core-server`. It uses the Winston logging library.
 
 ```js
-const logger = require('../utils/logger');
+import { Logger } from 'conexa-core-server';
 
-logger.error('message'); // level 0
-logger.warn('message'); // level 1
-logger.info('message'); // level 2
+Logger.error('message'); // level 0
+Logger.warn('message'); // level 1
+Logger.info('message'); // level 2
+Logger.http('message'); // level 3
+Logger.verbose('message'); // level 4
+Logger.debug('message'); // level 5
 ```
 
 In development mode, log messages of all severity levels are printed to the console.  
@@ -408,22 +473,12 @@ In production mode, only `info`, `warn`, and `error` logs are printed.
 
 ## Lint and Prettier
 
-Code formatting and linting is configured through VS Code settings and project-level configurations.
+Linting is done using ESLint and Prettier.
 
-To modify the Prettier configuration, update the `.vscode/settings.json` file:
+To modify the ESLint configuration, update the `.eslintrc.js` file.  
+To modify the Prettier configuration, update the `.prettierrc.json` file.
 
-```json
-{
-	"prettier.semi": true,
-	"prettier.singleQuote": true,
-	"prettier.tabWidth": 2,
-	"prettier.useTabs": true,
-	"prettier.printWidth": 150,
-	"prettier.trailingComma": "none",
-	"prettier.bracketSpacing": true,
-	"prettier.arrowParens": "always"
-}
-```
+To prevent files or directories from being linted, add them to `.eslintignore` and `.prettierignore`.
 
 ## License
 
