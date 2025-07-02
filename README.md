@@ -1,10 +1,8 @@
-![Logo](https://conexa.ai/wp-content/uploads/2021/03/logo.svg)
+# Clip - VTEX - Redirect
 
-# Wompi PSE - VTEX
+"This is a backend payment gateway that integrates VTEX e-commerce platform with Clip's Redirected Checkout API for processing various payment methods including credit/debit cards, cash payments, and bank transfers (SPEI) across Mexico. The system redirects customers to Clip's secure online payment site during checkout, supports installment plans up to 24 months without interest, international card processing, and provides real-time payment status updates through webhook notifications"
 
-Middleman that integrates Wompi PSE payments with VTEX ecommerce
-
-**Integration Docs**: [Wompi - Vtex - PSE](https://docs.wompi.co/)
+**Integration Docs**: [Clip - Vtex - Redirect](https://developer.clip.mx/reference/introduccion-a-clip-checkout#objeto-completo)
 
 ## Table of Contents
 
@@ -26,55 +24,54 @@ Middleman that integrates Wompi PSE payments with VTEX ecommerce
 ## Tech Stack
 
 | Category                  | Technologies                                                                     |
-| ------------------------- | -------------------------------------------------------------------------------- |
-| **Server**                | Node.js (v16-alpine), Express.js, MongoDB (Mongoose)                             |
-| **Payment Integration**   | Wompi API , VTEX Payment Provider Interface, Axios for HTTP requests             |
-| **Security & Middleware** | Crypto (SHA256 hashing), Express JSON parsing, Environment variables (dotenv)    |
-| **Logging & Monitoring**  | Winston (structured logging), Health check endpoints, Request timing middleware  |
-| **Development Tools**     | Jest (unit & integration testing), Nock (HTTP mocking), Nodemon (development)    |
-| **Deployment**            | Docker (Node.js 16-alpine), Helm Charts (Kubernetes), Multi-environment configs  |
-|                           | (stage/prod)                                                                     |
-| **Database**              | MongoDB with Mongoose ODM, Indexed collections for transactions and users        |
-| **Utilities**             | Country ISO conversion, Request timing middleware, Custom business logic modules |
+|---------------------------|----------------------------------------------------------------------------------|
+| **Server**                | Node.js (>=14.0.0), Express.js, TypeScript, MongoDB (Mongoose)           |
+| **Payment Integration**   | VTEX Package TS, Clip SDK v2, Clip Redirected Checkout API                        |
+| **Security & Middleware** | Helmet, XSS Protection, CORS, Express Rate Limiting, CryptoJS, express-mongo-sanitize, Conexa Core Server |
+| **Logging & Monitoring**  | Winston, Conexa Core Server, Health Checks, Morgan                                     |
+| **Development Tools**     | ESLint, Prettier, Husky, Jest (unit testing), Supertest (API testing), Nock (HTTP mocking), Commitizen |
+| **Deployment**            | Docker, Docker Compose, Kubernetes (Helm Charts), GitLab CI/CD                                           |
 
 ## Environment Variables
-
 The environment variables can be found and modified in the `.env.example` file. They come with these default values:
 
 ```bash
-APP_PORT=2222
-NODE_ENV=dev
+# Port number
+PORT=5420
+NODE_ENV=development
 
-APP_URL=https://wompi-vtex-pse-api-stage.conexa.ai
+API_URL="https://72tz1k0p-5420.brs.devtunnels.ms"
+FRONTEND_URL="https://localhost:3000"
 
-DB_URL=
+CRYPTOJS_SECRET_KEY=123456
 
-WOMPI_URL=https://sandbox.wompi.co/v1
-GET_BANKS_TOKEN=
+# URL of the Mongo DB
+MONGODB_URL=mongodb://127.0.0.1:27017/new-clip
 
-WOMPI_PUBLIC_KEY=
+VTEX_API_KEY=A
+VTEX_API_TOKEN=B
+JWT_SECRET_KEY=B
+EXPIRES_IN='7d'
 
-VTEX_URL=https://wompi.myvtex.com/
-VTEX_APPKEY=
-VTEX_TOKEN=
-MONITORING_TOKEN=
 ```
 
-| Environment Variable | Description                   | Default Value                                |
-| -------------------- | ----------------------------- | -------------------------------------------- |
-| `APP_PORT`           | The port number of the server | `2222`                                       |
-| `APP_URL`            | The base URL of the API       | `https://wompi-vtex-pse-api-stage.conexa.ai` |
-| `VTEX_URL`           | The base URL for VTEX         | `https://wompi.myvtex.com/`                  |
-| `VTEX_APPKEY`        | VTEX application API key      | ``                                           |
-| `VTEX_TOKEN`         | VTEX application API token    | ``                                           |
-| `DB_URL`             | MongoDB connection string     | `mongodb://127.0.0.1:27017/wompi-db`         |
-| `WOMPI_URL`          | The base URL of the Wompi API | `https://sandbox.wompi.co/v1`                |
-| `MONITORING_TOKEN`   | Monitoring service token      |                                              |
+| Environment Variable   | Description                                  | Default Value                                                                 |
+| ---------------------- | -------------------------------------------- | ----------------------------------------------------------------------------- |
+| `PORT`                 | The port number of the server                | `5420`                                                                        |
+| `NODE_ENV`             | The environment mode of the application      | `development`                                                                 |
+| `API_URL`              | The base URL of the API                      | `https://72tz1k0p-5420.brs.devtunnels.ms`                      |
+| `FRONTEND_URL`         | The URL of the frontend application          | `https://localhost:3000`                          |
+| `CRYPTOJS_SECRET_KEY`  | The secret key for CryptoJS operations       | `123456`                                                                    |
+| `MONGODB_URL`          | The MongoDB connection string                | `mongodb://127.0.0.1:27017/new-clip`                                          |
+| `VTEX_API_KEY`         | VTEX application API key                     | `A`                                                     |
+| `VTEX_API_TOKEN`       | VTEX application API token                   | `B`                                                                            |
+| `JWT_SECRET_KEY`       | The secret key for JWT operations            | `B`                                                                            |
+| `EXPIRES_IN`           | JWT token expiration time                    | `7d`                                                                            |
 
 ## Installing Dependencies
 
 ```bash
-npm run install-all
+yarn install-all
 ```
 
 ## Docker Compose
@@ -84,20 +81,20 @@ To run the project locally, you'll need MongoD. Below is an example `docker-comp
 📝 This file is not included in the repository. Create it manually based on your configuration.
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   mongodb:
     image: mongo:latest
     ports:
-      - '27017:27017'
+      - "27017:27017"
     volumes:
       - ./data:/data/db
 
   mongo-express:
     image: mongo-express
     ports:
-      - '8081:8081'
+      - "8081:8081"
     environment:
       - ME_CONFIG_MONGODB_SERVER=mongodb
     depends_on:
@@ -109,65 +106,95 @@ services:
 Start the servers in development mode:
 
 ```bash
-npm run dev
+yarn dev
 ```
 
 ## Project Structure
 
 ```
 ├── src                               # Source files
-│   ├── app.js                        # Express App configuration
-│   ├── server.js                     # Application entry point
 │   ├── config                        # Configuration files
-│   │   ├── enviroment.js             # Environment variables and app config
-│   │   └── paymentProvider.js        # Payment provider settings
-│   ├── businessProcess               # Business logic layer
-│   │   ├── db.businessProcess.js     # Database operations
-│   │   ├── reports.service.js        # Report generation service
-│   │   ├── vtex.bussines.js          # VTEX integration logic
-│   │   └── wompi.bussines.js         # Wompi API integration
+│   │   ├── config.ts                 # Environment variables and app config
+│   │   ├── app.ts                    # App configuration
+│   │   ├── manifest.ts               # VTEX manifest configuration
+│   │   └── paymentProvider.ts        # Payment provider settings
+│   ├── constants                     # Constants
+│   │   ├── common.ts                 # Common constants
+│   │   ├── payment.constants.ts      # Payment constants and mappings
+│   │   └── reports.constants.ts      # Reports constants
 │   ├── controllers                   # Controllers
-│   │   ├── ipn.controller.js         # Instant Payment Notification
-│   │   ├── payments.controller.js    # Payment processing endpoints
-│   │   ├── reports.controller.js     # Reports and monitoring
-│   │   └── vitals.controller.js      # Health check endpoints
+│   │   ├── vtex.controller.ts        # VTEX payment endpoints
+│   │   ├── ipn.controller.ts         # Instant Payment Notification
+│   │   ├── report.controller.ts      # Reports and monitoring
+│   │   └── vitals.controller.ts      # Health check endpoints
+│   ├── interfaces                    # TypeScript interfaces
+│   │   ├── payment.interface.ts      # Payment data structures
+│   │   ├── paymentProvider.interfaces.ts # Payment provider interfaces
+│   │   ├── transaction.interface.ts  # Transaction models
+│   │   ├── user.interfaces.ts        # User data structures
+│   │   ├── ipn.interface.ts          # IPN webhook interfaces
+│   │   ├── validation.interfaces.ts  # Validation interfaces
+│   │   ├── vtex.interface.ts         # VTEX specific interfaces
+│   │   └── reports.interface.ts      # Report data structures
+│   ├── lib                           # Library files
+│   │   ├── ApiError.ts               # Custom error handling
+│   │   ├── index.ts                  # Library exports
+│   │   ├── pick.ts                   # Object picking utilities
+│   │   ├── provider.ts               # Provider utilities
+│   │   ├── scripts/                  # Scripts directory
+│   │   └── toJSON/                   # JSON utilities
 │   ├── middlewares                   # Middlewares
-│   │   ├── currency.js               # Currency handling middleware
-│   │   ├── report.js                 # Report middleware
-│   │   └── timing.js                 # Request timing middleware
+│   │   ├── error.middleware.ts       # Error handling middleware
+│   │   ├── report.middleware.ts      # Report access middleware
+│   │   ├── validateCurrency.middleware.ts # Currency validation
+│   │   └── validateToken.middleware.ts # Token validation
 │   ├── models                        # Models (Mongoose)
-│   │   ├── Transaction.model.js      # Transaction schema
-│   │   └── User.model.js             # User schema
+│   │   ├── Transaction.model.ts      # Transaction schema
+│   │   ├── User.model.ts             # User schema
+│   │   └── Validation.model.ts       # Validation schema
 │   ├── routes                        # Routes
-│   │   ├── index.routes.js           # Main router configuration
-│   │   ├── ipn.routes.js             # IPN webhook routes
-│   │   ├── reports.routes.js         # Report routes
-│   │   ├── vitals.routes.js          # Health check routes
-│   │   └── vtex.routes.js            # VTEX payment routes
+│   │   ├── index.routes.ts           # Main router configuration
+│   │   ├── vtex.routes.ts            # VTEX payment routes
+│   │   ├── ipn.routes.ts             # IPN webhook routes
+│   │   ├── reports.routes.ts         # Report routes
+│   │   └── vitals.routes.ts          # Health check routes
+│   ├── services                      # Services
+│   │   ├── client.service.ts         # HTTP client service
+│   │   ├── ipn.service.ts            # IPN webhook processing
+│   │   ├── provider.service.ts       # Payment provider service
+│   │   ├── reports.service.ts        # Report generation
+│   │   ├── validation.service.ts     # Validation service
+│   │   ├── vtex.service.ts           # VTEX integration logic
+│   │   └── database/                 # Database services
+│   │       ├── transaction.service.ts # Transaction operations
+│   │       └── user.service.ts       # User operations
 │   ├── tests                         # Tests
-│   │   ├── integration               # Integration tests
-│   │   │   └── endToend.process.test.js # End-to-end tests
-│   │   ├── mocks                     # Test mocks and fixtures
-│   │   │   ├── credentials.js        # Mock credentials
-│   │   │   ├── mockWompiApi.js       # Wompi API mocks
-│   │   │   ├── mockWompiResponse.js  # Wompi response mocks
-│   │   │   └── vtexPaymentData.js    # VTEX payment data mocks
-│   │   ├── unit                      # Unit tests
-│   │   │   ├── businessProcess       # Business logic tests
-│   │   │   │   ├── db.bussines.test.js # Database tests
-│   │   │   │   └── wompi.bussines.test.js # Wompi integration tests
-│   │   │   └── controllers           # Controller tests
-│   │   │       ├── ipn.controller.test.js # IPN controller tests
-│   │   │       └── vtex-payments.controller.test.js # VTEX controller tests
-│   │   └── setEnvVars.js             # Test environment setup
-│   └── utils                         # Utility functions
-│       ├── logger.js                 # Winston logging configuration
-│       ├── reports.js                # Report utilities
-│       └── utils.js                  # General utilities
-├── Dockerfile                        # Docker container configuration
-├── jest.config.js                    # Jest testing configuration
-├── package.json                      # Project dependencies and scripts
-├── package-lock.json                 # Dependency lock file
+│   │   ├── e2e/                      # End-to-end tests
+│   │   ├── mocks/                    # Test mocks and fixtures
+│   │   ├── unit/                     # Unit tests
+│   │   └── setupTestDB.ts            # Test database setup
+│   ├── utils                         # Utility functions
+│   │   ├── encryption.utils.ts       # Encryption utilities
+│   │   ├── formatter.utils.ts        # Data formatting utilities
+│   │   ├── manifest.utils.ts         # Manifest utilities
+│   │   ├── reports.utils.ts          # Report utilities
+│   │   ├── translation.utils.ts      # Status translation utilities
+│   │   └── validation.utils.ts       # Validation helpers
+│   ├── validations                   # Validation schemas
+│   │   └── provider.validation.ts    # Provider validation
+│   ├── docs                          # Documentation
+│   │   ├── openapi.json              # OpenAPI specification
+│   │   └── postman-collection.json   # API documentation
+│   ├── app.ts                        # Express App configuration
+│   ├── index.ts                      # Application entry point
+│   ├── custom.d.ts                   # Custom TypeScript declarations
+│   └── declaration.d.ts              # Type declarations
+├── automation/                       # Kubernetes deployment files
+├── Dockerfile                        # Docker configuration
+├── jest.config.cjs                   # Jest test configuration
+├── package.json                      # Project dependencies
+├── tsconfig.json                     # TypeScript configuration
+├── yarn.lock                         # Yarn lock file
 └── README.md                         # Project documentation
 ```
 
@@ -178,44 +205,45 @@ List of available routes (base path: `/api/v1`):
 **VTEX Payment Routes:**
 
 ```bash
-GET  /vtex/manifest                    # Get payment provider manifest
+GET  /vtex/manifest                    # Get VTEX payment manifest
 GET  /vtex/payment-methods             # Get available payment methods
 POST /vtex/payments                    # Create payment transaction
 POST /vtex/payments/:payment_id/settlements    # Process settlement
 POST /vtex/payments/:payment_id/cancellations  # Cancel payment
 POST /vtex/payments/:payment_id/refunds        # Process refund
-GET  /vtex/banks                       # Get available banks
-POST /vtex/payments/delay              # Simulate delayed callback response
 ```
 
 **IPN (Instant Payment Notification) Routes:**
 
 ```bash
-POST /ipn/event                        # Handle Wompi webhook events
+POST /webhooks                         # Handle Clip webhook events
 ```
 
 **Reports Routes:**
 
 ```bash
-GET  /reports/last-orders              # Get last orders (requires monitoring token)
-GET  /reports/status-orders            # Get status orders (requires monitoring token)
-GET  /reports/client/health            # Client health check
-```
-
-**Vitals Routes:**
-
-```bash
-GET  /vitals/ping                      # Service ping
-GET  /vitals/dbcheck                   # Database connectivity check
+GET  /reports/last-orders              # Get last orders
+GET  /reports/status-orders            # Get status orders
+GET  /reports/client/health            # Check client health status
+GET  /reports/health/client-ui         # Check UI health status
 ```
 
 **Health Check Routes:**
 
 ```bash
-GET  /                                 # Health check
-GET  /health                           # Health check
-GET  /health-check                     # Health check
-GET  /healthcheck                      # Health check
+GET  /                                 # Welcome message
+GET  /dbCheck                          # Database health check
+```
+
+**Alternative Routes (without prefix):**
+
+```bash
+GET  /vtex/manifest                    # Get VTEX payment manifest (alternative)
+GET  /vtex/payment-methods             # Get available payment methods (alternative)
+POST /vtex/payments                    # Create payment transaction (alternative)
+POST /vtex/payments/:payment_id/settlements    # Process settlement (alternative)
+POST /vtex/payments/:payment_id/cancellations  # Cancel payment (alternative)
+POST /vtex/payments/:payment_id/refunds        # Process refund (alternative)
 ```
 
 ## Flow Diagrams
@@ -223,262 +251,342 @@ GET  /healthcheck                      # Health check
 ### Payments
 
 ```mermaid
-    sequenceDiagram
+sequenceDiagram
     actor Customer
-    participant VTEX
+    participant Shopify
     participant Middleman
-    participant Database
-    participant Wompi
+    participant clip
 
-    note over Customer,VTEX: Payment Initiation
-    Customer->>VTEX: Select PSE Payment
-    VTEX->>Middleman: POST /vtex/payments
-    Middleman->>Middleman: Timing & Currency Validation
-
-    note over Middleman,Database: Check Existing Transaction
-    Middleman->>Database: Find Transaction by paymentId
-    alt Transaction Exists
-        Database-->>Middleman: Return Existing Status
-        Middleman-->>VTEX: Return Cached Response
-    else New Transaction
-        Database-->>Middleman: No Transaction Found
-    end
-
-    note over Middleman: Merchant Validation
-    Middleman->>Middleman: Extract Merchant Data
-    Middleman->>Middleman: Validate Wompi Keys (Prod/Sandbox)
-    alt Invalid Keys
-        Middleman-->>VTEX: Return Denied Response
-    end
-
-    note over Middleman,Wompi: Authentication
-    Middleman->>Wompi: GET /merchants/{publicKey}
-    Wompi-->>Middleman: Return Access Token
-    alt No Access Token
-        Middleman-->>VTEX: Return Denied Response
-    end
-
-    note over Middleman,Database: User Management
-    Middleman->>Database: Find or Create User
-    Database-->>Middleman: Return User Data
-
-    note over Middleman: Payment Object Creation
-    Middleman->>Middleman: Build Wompi Payment Object
-    Middleman->>Wompi: GET /pse/financial_institutions
-    Wompi-->>Middleman: Return Bank List
-
-    note over Middleman,Wompi: Payment Processing
-    Middleman->>Wompi: POST /transactions
-    Wompi-->>Middleman: Return Payment Response
-
-    note over Middleman: Response Handling
-    alt Payment Declined
-        Middleman->>Database: Create Transaction (DENIED)
-        Middleman-->>VTEX: Return Denied Response
-    else Async Payment Required
-        Middleman->>Database: Create Transaction (PENDING)
-        Middleman-->>VTEX: Return Redirect URL
-    else Payment Approved
-        Middleman->>Database: Create Transaction (APPROVED)
-        Middleman->>VTEX: POST Callback with Status
-    end
-
-    note over VTEX,Customer: Payment Completion
-    VTEX-->>Customer: Show Payment Result
-```
-
-### Settlements
-
-```mermaid
-sequenceDiagram
-    participant VTEX
-    participant Middleman
-    participant VTEXPackage
-
-    note over VTEX,Middleman: Settlement Request
-    VTEX->>Middleman: POST /vtex/payments/{payment_id}/settlements
-    Note over VTEX,Middleman: Headers: x-vtex-api-appkey, x-vtex-api-apptoken<br/>Body: Settlement data (paymentId, settleId, value, etc.)
-
-    note over Middleman: Settlement Processing
-    Middleman->>VTEXPackage: settlementsPaymentResponse(req.body)
-    VTEXPackage-->>Middleman: Formatted settlement response
-
-    note over Middleman: Response Handling
-    alt Success
-        Middleman-->>VTEX: 200 OK - Settlement response
-        Note over Middleman,VTEX: Response includes:<br/>- paymentId<br/>- settleId<br/>- code<br/>- message: "transaction settled"
-    else Error
-        Middleman-->>VTEX: 500 Error - Settlement failed
-        Note over Middleman,VTEX: Error response with:<br/>- paymentId<br/>- message: "Settlement has failed due to an internal error"
-    end
-```
-
-### Cancellation
-
-```mermaid
-sequenceDiagram
-    participant VTEX
-    participant Middleman
-    participant VTEXPackage
-
-    note over VTEX,Middleman: Cancellation Request
-    VTEX->>Middleman: POST /vtex/payments/{payment_id}/cancellations
-    Note over VTEX,Middleman: Headers: x-vtex-api-appkey, x-vtex-api-apptoken<br/>Body: Cancellation data (paymentId, message, code, etc.)
-
-    note over Middleman: Cancellation Processing
-    Middleman->>VTEXPackage: cancellationPaymentResponse(req.body, null)
-    VTEXPackage-->>Middleman: Formatted cancellation response with status
-
-    note over Middleman: Response Handling
-    alt Success (Manual Cancellation)
-        Middleman-->>VTEX: 501 Not Implemented - Manual cancellation required
-        Note over Middleman,VTEX: Response includes:<br/>- paymentId<br/>- code: "cancel-manually"<br/>- message: "Cancellation should be done manually"<br/>- cancellationId: null
-    else Error
-        Middleman-->>VTEX: 500 Error - Cancellation failed
-        Note over Middleman,VTEX: Error response with:<br/>- paymentId<br/>- message: "Cancellation has failed due to an internal error"
-    end
+    Customer->>+Shopify: Complete checkout
+    Shopify->>+Middleman: Send payment data
+    Middleman->>+clip: Request payment order
+    clip->>+Middleman: Payment URL
+    Note over Middleman : Save payment data on DB
+    Middleman->>+Shopify: PaymentURL
+    Shopify->>+Customer: Redirect to PaymentURL
+    Customer->>+clip: Make the payment
+    clip->>+Middleman: Notify the change of status: {middleAPI}/webhook/status
+    Note over Middleman: Update payment data on DB
+    Middleman->>+Shopify: Resolve/Reject Payment
+    Shopify->>+Middleman: Return continueCheckoutUrl
+    clip->>+Customer: Redirect to {middleAPI}/continue-checkout/:id
+    Customer->>+Middleman: Go to url
+    Middleman->>+Customer: Redirect to checkoutUrl
+    Customer->>+Shopify: Go to checkoutUrl
 ```
 
 ### Refunds
 
 ```mermaid
 sequenceDiagram
+    actor Merchant
     participant VTEX
-    participant Middleman
-    participant VTEXPackage
+    participant ClipBackend
+    participant Database
+    participant ClipAPI
 
-    note over VTEX,Middleman: Refund Request
-    VTEX->>Middleman: POST /vtex/payments/{payment_id}/refunds
-    Note over VTEX,Middleman: Headers: x-vtex-api-appkey, x-vtex-api-apptoken<br/>Body: Refund data (paymentId, value, message, etc.)
-
-    note over Middleman: Refund Processing
-    Middleman->>VTEXPackage: refundPaymentResponse(req.body, null)
-    VTEXPackage-->>Middleman: Formatted refund response with status
-
-    note over Middleman: Response Handling
-    alt Success (Manual Refund)
-        Middleman-->>VTEX: 501 Not Implemented - Manual refund required
-        Note over Middleman,VTEX: Response includes:<br/>- paymentId<br/>- code: "refund-manually"<br/>- message: "This payment needs to be manually refunded"<br/>- refundId: null<br/>- value: 0
-    else Error
-        Middleman-->>VTEX: 500 Error - Refund failed
-        Note over Middleman,VTEX: Error response with:<br/>- paymentId<br/>- message: "Refund has failed due to an internal error"
+    Merchant->>+VTEX: Request refund
+    VTEX->>+ClipBackend: POST /vtex/payments/:payment_id/refunds
+    Note over ClipBackend: 1. Extract paymentId, value, requestId
+    
+    ClipBackend->>+Database: Find transaction by paymentId
+    Database->>+ClipBackend: Transaction data
+    
+    Note over ClipBackend: 2. Validate refund amount
+    Note over ClipBackend: 3. Check if refund is valid
+    
+    alt Invalid refund (amount exceeds total)
+        ClipBackend->>ClipBackend: Save refund attempt to DB
+        ClipBackend->>+VTEX: Invalid refund response
+    else Valid refund
+        ClipBackend->>+Database: Find user by userId
+        Database->>+ClipBackend: User credentials
+        
+        ClipBackend->>+ClipAPI: Authenticate with user credentials
+        ClipAPI->>+ClipBackend: Authentication token
+        
+        ClipBackend->>+ClipAPI: Create refund request
+        ClipAPI->>+ClipBackend: Refund response (approved/declined)
+        
+        Note over ClipBackend: 4. Update transaction status
+        Note over ClipBackend: 5. Save refund to transaction history
+        
+        ClipBackend->>+Database: Save updated transaction
+        ClipBackend->>+VTEX: Refund response with status
     end
+    
+    VTEX->>+Merchant: Refund confirmation
 ```
 
 ## Middleware and Validations
-
-The project includes custom middleware to support request validation, monitoring access control, and performance tracking.
+The project includes custom middleware to support authentication, request validation, error handling, and monitoring access control.
 
 - 🔐 **ReportMiddleware**  
   Validates monitoring access using a Bearer token for report endpoints.  
   Authorization: Bearer `<monitoring-token>`
 
   ```js
-  // Validates against MONITORING_TOKEN environment variable
-  if (!authorization || authorization.split(' ')[1] !== MONITORING_TOKEN) {
-  	return res.sendStatus(401);
+  // Validates against config.api.monitoringToken
+  if (!authorization || authorization.split(' ')[1] !== config.api.monitoringToken) {
+    return res.sendStatus(httpStatus.UNAUTHORIZED);
   }
   ```
+  Usage: Applied to `/api/v1/reports/last-orders` and `/api/v1/reports/status-orders` endpoints for monitoring access control.
 
-  Usage: Applied to `/api/v1/reports/*` endpoints for monitoring access control.
-
-- 💰 **CurrencyMiddleware**  
-  Validates that payment transactions use Colombian Peso (COP) currency.  
-  Request Body: `{ currency: "COP" }`
+- 🔑 **validateToken**  
+  Validates JWT tokens for IPN webhook endpoints to prevent duplicate processing and ensure webhook authenticity.  
+  Query Parameter: `token=<jwt-token>`
 
   ```js
-  // Validates currency is COP for payment requests
-  if (currency !== 'COP') {
-  	return res.status(200).json(
-  		getResponseVtexDenied(
-  			{
-  				message: "The currency must be 'COP'"
-  			},
-  			paymentId
-  		)
-  	);
+  // Validates JWT token and checks if transaction was already processed
+  const decodedToken = jwt.verify(token, jwtKeys.secret) as ITokenPayload;
+  const validation = await findValidationById(decodedToken.id);
+  const isValidToken = verifyToken(validation, decodedToken.verify);
+  ```
+  **Features:**
+  - JWT token verification
+  - Prevents duplicate webhook processing
+  - Validates webhook authenticity
+  - Handles different webhook event types
+
+- 💱 **validateCurrency**  
+  Validates that the payment currency is supported by the system.  
+  Supported currencies: `MXN`, `USD`
+
+  ```js
+  // Validates against validCurrencies array
+  if (!validCurrencies.includes(currency as Currencies)) {
+    return res.status(httpStatus.OK).json({
+      paymentId,
+      status: 'denied',
+      message: 'Currency not allowed',
+      code: null,
+      cancellationId: null,
+    });
   }
   ```
+  Usage: Applied to `POST /vtex/payments` endpoint to ensure only supported currencies are processed.
 
-  Usage: Applied to `/api/v1/vtex/payments` endpoint for currency validation.
+- 🛡️ **decryptRequestMiddleware** (from `conexa-core-server`)  
+  External middleware from the Conexa Core Server library for request decryption.  
+  Usage: Applied to routes with `security: true` flag in route configuration.
 
-- ⏱️ **TimingMiddleware**  
-  Tracks request processing time and handles timeout scenarios for payment requests.  
-  Features:
+- ⚠️ **errorConverter**  
+  Converts various error types to standardized ApiError format with proper HTTP status codes.  
+  **Features:**
+  - Converts Mongoose errors to `400 Bad Request`
+  - Handles validation errors with message cleanup
+  - Generates error codes from error messages
+  - Preserves stack traces in development
 
-  - Measures request duration
-  - Logs processing time
-  - Handles 35-second timeout scenarios
-  - Triggers timeout flow for long-running requests
+- 🚨 **errorHandler**  
+  Handles final error responses with environment-specific behavior.  
+  **Features:**
+  - Masks internal errors in production
+  - Includes stack traces in development
+  - Standardizes error response format
+  - Logs errors in development mode
 
-  ```js
-  // Tracks request timing and handles timeouts
-  const startTime = Date.now();
-  const checkResponseTimeout = async () => {
-  	const elapsedTime = Date.now() - startTime;
-  	if (elapsedTime >= 35000) {
-  		// Handle timeout scenario
-  	}
-  };
-  ```
-
-  Usage: Applied to `/api/v1/vtex/payments` endpoint for performance monitoring.
-
-- 🔧 **Global Middleware**  
-  Applied globally in `app.js`:
-  - `express.json()`: JSON request body parsing
-  - Health check endpoints: `/`, `/health`, `/health-check`, `/healthcheck`
+- 🔧 **Global Security Middleware**  
+  Applied globally in `app.ts`:  
+  - `helmet`: Security HTTP headers  
+  - `cors`: Cross-origin resource sharing  
+  - `xss`: XSS protection  
+  - `express-mongo-sanitize`: MongoDB injection protection  
+  - `compression`: Gzip compression  
+  - `HttpLogger`: Request/response logging (non-test environments)
 
 🔄 **Middleware Application Flow**
-
-1. Global Middleware (`app.js`)
+1. Global Security Middleware (`app.ts`)
 2. Route-specific Middleware (based on route configuration)
 3. Controller Logic
-4. Response handling
+4. Error Conversion (`errorConverter`)
+5. Error Handling (`errorHandler`)
 
 📍 **Route Middleware Mapping**
 
-| Route                    | Middleware Applied                       |
-| ------------------------ | ---------------------------------------- |
-| `/api/v1/vtex/payments`  | `timingMiddleware`, `currencyMiddleware` |
-| `/api/v1/vtex/*` (other) | None (public endpoints)                  |
-| `/api/v1/ipn/*`          | None (webhook endpoints)                 |
-| `/api/v1/reports/*`      | `reportMiddleware`                       |
-| `/api/v1/vitals/*`       | None (health check endpoints)            |
-
-🔍 **Middleware Configuration**
-
-- **ReportMiddleware**: Uses `MONITORING_TOKEN` environment variable
-- **CurrencyMiddleware**: Enforces COP currency for Colombian payments
-- **TimingMiddleware**: 35-second timeout threshold for payment processing
-- **Global Middleware**: Basic Express.js setup with health checks
+| Route                | Middleware Applied                    |
+| -------------------- | ------------------------------------- |
+| `/api/v1/vtex/*`     | `validateCurrency` (payments only)    |
+| `/api/v1/webhooks/*` | `validateToken`                       |
+| `/api/v1/reports/*`  | `ReportMiddleware` (specific routes)  |
+| Secure routes        | `decryptRequestMiddleware`            |
 
 ## Logging
 
-Import the logger from `conexa-core-server`. It uses the Winston logging library.
+The project uses the `Logger` from `conexa-core-server` which is built on top of Winston logging library. The logging system provides comprehensive tracking of application events, errors, and debugging information.
+
+### **Import and Usage**
 
 ```js
 import { Logger } from 'conexa-core-server';
 
-Logger.error('message'); // level 0
-Logger.warn('message'); // level 1
-Logger.info('message'); // level 2
-Logger.http('message'); // level 3
-Logger.verbose('message'); // level 4
-Logger.debug('message'); // level 5
+Logger.error('message'); // level 0 - Critical errors
+Logger.warn('message');  // level 1 - Warnings
+Logger.info('message');  // level 2 - General information
+Logger.http('message');  // level 3 - HTTP requests
+Logger.verbose('message'); // level 4 - Verbose information
+Logger.debug('message'); // level 5 - Debug information
 ```
 
-In development mode, log messages of all severity levels are printed to the console.  
-In production mode, only `info`, `warn`, and `error` logs are printed.
+### **Logging Configuration**
+
+The logging behavior is configured through the Conexa Core Server initialization in `app.ts`:
+
+```js
+configure({
+  secretKey: cryptojsKey,
+  privateKey: cryptojsKey,
+  securityBypass: env !== production,
+  debug: env !== production,
+  env,
+});
+```
+
+### **HTTP Request Logging**
+
+The application automatically logs HTTP requests and responses using `HttpLogger`:
+
+```js
+if (env !== test) {
+  app.use(HttpLogger.successHandler);
+  app.use(HttpLogger.errorHandler);
+}
+```
+
+### **Environment-Specific Behavior**
+
+- **Development Mode**: All log levels are printed to the console for comprehensive debugging
+- **Production Mode**: Only `info`, `warn`, and `error` logs are printed to reduce noise
+- **Test Mode**: HTTP logging is disabled to keep test output clean
+
+### **Common Logging Patterns**
+
+The application uses structured logging with clear section markers:
+
+```js
+// Payment flow logging
+Logger.info('===== PAYMENTS =====');
+Logger.info('===== AUTH TOKEN =====', token);
+Logger.info('=====CHECKOUTPAYLOAD=====', checkoutPayload);
+Logger.info(`Transaction ${payment.payment_request_id} successfully created`);
+
+// Webhook processing
+Logger.info('===== UPDATE STATUS WEBHOOK =====');
+Logger.info(`Transaction id ${transaction.referenceId} status notified to Vtex`);
+
+// Error logging with context
+Logger.error(`Transaction ${paymentId} does not exist`);
+Logger.error(`Credentials missing`);
+
+// Debug information
+Logger.debug('=== Reports Validation ====');
+Logger.debug(payload);
+```
+
+### **Error Logging**
+
+Errors are logged in the error handler middleware:
+
+```js
+if (config.env === 'development') Logger.error(err);
+```
+
+This ensures that detailed error information is available during development while maintaining security in production.
 
 ## Lint and Prettier
 
-Linting is done using ESLint and Prettier.
+The project uses ESLint and Prettier for code quality and formatting. The configuration is set up to enforce consistent code style and catch potential issues early in development.
 
-To modify the ESLint configuration, update the `.eslintrc.js` file.  
-To modify the Prettier configuration, update the `.prettierrc.json` file.
+### **Available Scripts**
 
-To prevent files or directories from being linted, add them to `.eslintignore` and `.prettierignore`.
+```bash
+# Linting
+yarn lint              # Check for linting errors
+yarn lint:fix          # Fix auto-fixable linting errors
+
+# Formatting
+yarn prettier          # Check code formatting
+yarn prettier:fix      # Fix code formatting automatically
+```
+
+### **ESLint Configuration**
+
+The project uses a comprehensive ESLint setup with multiple configurations:
+
+#### **Base Configuration (`.eslintrc.json`)**
+- **Extends**: Airbnb Base, Jest, Security, and Prettier configurations
+- **Plugins**: Jest, Security, and Prettier
+- **Environment**: Node.js and Jest
+- **Key Rules**:
+  - `no-console`: Error (prevents console.log usage)
+  - `func-names`: Off (allows anonymous functions)
+  - `no-underscore-dangle`: Off (allows underscore prefixes)
+  - `consistent-return`: Off (flexible return statements)
+  - `security/detect-object-injection`: Off (disabled for specific use cases)
+
+#### **TypeScript Override**
+- **Parser**: `@typescript-eslint/parser`
+- **Extends**: Airbnb TypeScript base configuration
+- **Project**: Uses `tsconfig.json` for type checking
+- **Additional Rules**:
+  - `import/prefer-default-export`: Off (allows named exports)
+
+### **Prettier Configuration (`.prettierrc.json`)**
+
+```json
+{
+  "parser": "typescript",
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 110,
+  "endOfLine": "auto",
+  "tabWidth": 2
+}
+```
+
+**Key Settings**:
+- **Single Quotes**: Enforced for consistency
+- **Trailing Commas**: Added to all multiline structures
+- **Print Width**: 110 characters per line
+- **Tab Width**: 2 spaces for indentation
+- **End of Line**: Auto-detection for cross-platform compatibility
+
+### **File Exclusions**
+
+#### **ESLint Ignore (`.eslintignore`)**
+```
+node_modules
+bin
+dist
+```
+
+#### **Prettier Ignore (`.prettierignore`)**
+```
+node_modules
+coverage
+dist
+```
+
+### **Integration with Git Hooks**
+
+The project uses `husky` and `lint-staged` to automatically run linting and formatting on staged files before commits, ensuring code quality is maintained.
+
+### **Security Focus**
+
+The ESLint configuration includes the `eslint-plugin-security` plugin to catch common security vulnerabilities:
+- SQL injection prevention
+- XSS protection
+- Object injection detection
+- And other security best practices
+
+### **TypeScript Support**
+
+Full TypeScript support with:
+- Type-aware linting
+- Import/export validation
+- Type checking integration
+- Modern ES6+ features support
 
 ## License
 
