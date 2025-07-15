@@ -1,10 +1,15 @@
-# Aplazo - VTEX 
+# AstroPay - VTEX 
 
-"This is a backend payment middleman that integrates VTEX e-commerce platform with Aplazo Redirected Checkout API for processing installment payments. The system implements a redirect-based payment flow where customers are redirected from VTEX to Aplazo's payment page to complete their installment purchase, then returned to VTEX upon payment completion.
+This is a redirected backend payment intermediary that integrates the VTEX e-commerce platform with Astropay.
 
+## Documentation
 
+### API Documentation
+**Backend API Reference**: [Astropay - Vtex](https://developers-wallet.astropay.com/)
 
-**Integration Docs**: [Aplazo - Vtex](https://aplazo.gitbook.io/aplazo-integrations/online-api/overview)
+### VTEX Connector Installation
+**VTEX Connector Setup**: [Astropay Vtex Connector](https://astropay-vtex-docs.netlify.app/)
+
 
 ## Table of Contents
 
@@ -27,81 +32,52 @@
 
 | Category                  | Technologies                                                                     |
 |---------------------------|----------------------------------------------------------------------------------|
-| **Backend Framework**     | NestJS (v8.0.0), Node.js (v20), TypeScript (v4.3.5), Express.js                |
-| **Database**              | MongoDB (v5.13.3) with Mongoose ODM                                             |
-| **Payment Integration**   | Aplazo API, VTEX API, Axios HTTP client                                         |
-| **Authentication**        | Passport.js, JWT (JSON Web Tokens), Local Strategy                               |
-| **Frontend**              | React (v16.14.0), Redux Toolkit, Material-UI (v4.12.2), React Router DOM        |
-| **Build Tools**           | Webpack (v5.46.0), Babel, CSS/SCSS loaders                                       |
-| **Development Tools**     | ESLint, Prettier, Jest (v27.0.6), Supertest, TypeScript compiler                |
-| **Process Management**    | PM2 (Production), NestJS CLI                                                     |
-| **Deployment**            | Docker (Node.js 20 Alpine), Docker Compose, PM2 ecosystem                        |
+| **Server**                | Node.js (16-alpine), Express.js, MongoDB (Mongoose)                              |
+| **Payment Integration**   | VTEX API Integration, AstroPay API, CryptoJS for HMAC signatures                |
+| **Security & Middleware** | CORS, CryptoJS, JWT, bcryptjs                                                   |
+| **Logging & Monitoring**  | Winston, Health Checks, Morgan                                                  |
+| **Development Tools**     | ESLint, Prettier, Mocha (unit testing), Chai (assertions), Nock (HTTP mocking) |
+| **Deployment**            | Docker, Docker Compose, Jenkins CI/CD, PM2 Process Manager                      |
 
 ## Environment Variables
 The environment variables can be found and modified in the `.env.example` file. They come with these default values:
 
 ```bash
 # Port number
-PORT=
-NODE_ENV=
+PORT
+NODE_ENV
 
-API_URL=
-FRONTEND_URL=
+# VTEX Configuration
+VTEX_APPKEY
+VTEX_TOKEN
+VTEX_URL
 
-CRYPTOJS_SECRET_KEY=
-
-# URL of the Mongo DB
-MONGODB_URL=
-
-VTEX_API_KEY=
-VTEX_API_TOKEN=
-JWT_SECRET_KEY=
-EXPIRES_IN=
-
-MONITORING_TOKEN=
-
-# Aplazo API Configuration
-URL_APLAZO=
-URL_APLAZO_REFUNDS=
-APP_URL=
-
-# VTEX API Configuration
-APLAZO_APPPKEY=
-APLAZO_APPTOKEN=
+# AstroPay Configuration
+ASTROPAY_URL
 
 # Database Configuration
-DB_DATABASE=
+MONGO_URI
 
 # Application Configuration
-APP_PORT=
+URL_BASE
 
 ```
 
-| Environment Variable   | Description                                  | Default Value                                                                 |
-| ---------------------- | -------------------------------------------- | ----------------------------------------------------------------------------- |
-| `PORT`                 | The port number of the server                |                                                                               |
-| `NODE_ENV`             | The environment mode of the application      |                                                                               |
-| `API_URL`              | The base URL of the API                      |                                                                               |
-| `FRONTEND_URL`         | The URL of the frontend application          |                                                                               |
-| `CRYPTOJS_SECRET_KEY`  | The secret key for CryptoJS operations       |                                                                               |
-| `MONGODB_URL`          | The MongoDB connection string                |                                                                               |
-| `VTEX_API_KEY`         | VTEX application API key                     |                                                                               |
-| `VTEX_API_TOKEN`       | VTEX application API token                   |                                                                               |
-| `JWT_SECRET_KEY`       | The secret key for JWT operations            |                                                                               |
-| `EXPIRES_IN`           | JWT token expiration time                    |                                                                               |
-| `MONITORING_TOKEN`     | Token for accessing monitoring endpoints     |                                                                               |
-| `URL_APLAZO`           | Aplazo API base URL                          |                                                                               |
-| `URL_APLAZO_REFUNDS`   | Aplazo refunds API URL                       |                                                                               |
-| `APP_URL`              | Application base URL                         |                                                                               |
-| `APLAZO_APPPKEY`       | Aplazo VTEX API key                          |                                                                               |
-| `APLAZO_APPTOKEN`      | Aplazo VTEX API token                        |                                                                               |
-| `DB_DATABASE`          | Database connection string                   |                                                                               |
-| `APP_PORT`             | Application port number                      |                                                                               |
+| Environment Variable   | Description                                  |
+| ---------------------- | -------------------------------------------- |
+| `PORT`                 | The port number of the server                |
+| `NODE_ENV`             | The environment mode of the application      |
+| `VTEX_APPKEY`          | VTEX application API key                     |
+| `VTEX_TOKEN`           | VTEX application API token                   |
+| `VTEX_URL`             | VTEX API base URL                           |
+| `ASTROPAY_URL`         | AstroPay API base URL                       |
+| `MONGO_URI`            | MongoDB connection string                    |
+| `URL_BASE`             | Application base URL                         |
 
 ## Installing Dependencies
 
 ```bash
-node install
+npm install
 ```
 
 ## Docker Compose
@@ -136,166 +112,87 @@ services:
 Start the servers in development mode:
 
 ```bash
-node run start:dev
+npm run dev
 ```
 
 ## Project Structure
 
 ```
-├── src/                              # Backend source files (NestJS)
-│   ├── admin/                        # Admin module
-│   │   ├── admin.controller.ts       # Admin endpoints
-│   │   └── admin.module.ts          # Admin module configuration
-│   ├── auth/                         # Authentication module
-│   │   ├── auth.module.ts           # Auth module configuration
-│   │   ├── auth.service.ts          # Authentication service
-│   │   ├── constants.ts             # JWT constants
-│   │   ├── jwt-auth.guard.ts        # JWT authentication guard
-│   │   ├── jwt.strategy.ts          # JWT strategy
-│   │   ├── local-auth.guard.ts      # Local authentication guard
-│   │   └── local.strategy.ts        # Local strategy
-│   ├── exceptions/                   # Custom exceptions
-│   │   └── CredentialException.ts   # Credential validation exception
+├── backend/                          # Backend application
+│   ├── config/                       # Configuration files
+│   │   └── db.js                     # Database configuration
+│   ├── controllers/                  # Controllers
+│   │   ├── astroPay.controller.js    # AstroPay payment controller
+│   │   └── payments.controller.js    # Payment processing controller
 │   ├── models/                       # Database models (Mongoose)
-│   │   ├── aplazo-user.ts           # Aplazo user model
-│   │   ├── configuration.ts         # Configuration model
-│   │   ├── credential.ts            # Credential model
-│   │   ├── payment.ts               # Payment model
-│   │   └── user.ts                  # User model
-│   ├── payments/                     # Payments module
-│   │   ├── payments.controller.ts    # Payment endpoints
-│   │   ├── payments.module.ts       # Payments module configuration
-│   │   └── settlement.controller.ts  # Settlement endpoints
+│   │   ├── Transaction.js            # Transaction schema
+│   │   └── User.js                   # User schema
+│   ├── routes/                       # API routes
+│   │   ├── index.js                  # Main router configuration
+│   │   ├── astroPay/                 # AstroPay routes
+│   │   │   └── astroPay.js          # AstroPay API endpoints
+│   │   └── payments/                 # Payment routes
+│   │       └── payments.js           # Payment API endpoints
 │   ├── services/                     # Business logic services
-│   │   ├── aplazo.service.ts        # Aplazo API integration
-│   │   ├── configuration.service.ts  # Configuration management
-│   │   ├── credential.service.ts    # Credential management
-│   │   ├── payments.service.ts      # Payment processing
-│   │   ├── services.module.ts       # Services module configuration
-│   │   ├── users.service.ts         # User management
-│   │   └── vtex.service.ts          # VTEX API integration
-│   ├── app.controller.ts             # Main application controller
-│   ├── app.module.ts                # Root module configuration
-│   └── main.ts                      # Application entry point
-├── resources/                        # Frontend resources
-│   ├── js/                          # React frontend
-│   │   ├── assets/                  # Static assets
-│   │   │   ├── css/                 # Stylesheets
-│   │   │   ├── img/                 # Images
-│   │   │   └── jss/                 # Material-UI styles
-│   │   ├── components/              # React components
-│   │   │   ├── Card/                # Card components
-│   │   │   ├── CustomButtons/       # Custom button components
-│   │   │   ├── CustomInput/         # Custom input components
-│   │   │   ├── CustomTabs/          # Custom tabs components
-│   │   │   ├── Grid/                # Grid components
-│   │   │   ├── Navbars/             # Navigation components
-│   │   │   ├── Sidebar/             # Sidebar components
-│   │   │   ├── Snackbar/            # Notification components
-│   │   │   ├── Table/               # Table components
-│   │   │   ├── Tasks/               # Task components
-│   │   │   └── Typography/          # Typography components
-│   │   ├── hooks/                   # Custom React hooks
-│   │   ├── layouts/                 # Layout components
-│   │   ├── services/                # Frontend services
-│   │   ├── store/                   # Redux store
-│   │   ├── variables/               # Configuration variables
-│   │   ├── views/                   # Page components
-│   │   │   ├── Configuration/       # Configuration pages
-│   │   │   ├── Dashboard/           # Dashboard pages
-│   │   │   └── Login/               # Login pages
-│   │   ├── index.js                 # Frontend entry point
-│   │   └── routes.js                # Frontend routing
-│   └── views/                       # Handlebars templates
-├── public/                           # Static files
-├── deployment/                       # Deployment configuration
-│   ├── nginx/                       # Nginx configuration
-│   ├── .docker_env-develop          # Development environment variables
-│   ├── .docker_env-prod             # Production environment variables
-│   ├── deployment.json              # PM2 deployment configuration
-│   └── docker-compose.yml           # Docker Compose configuration
-├── test/                            # Test files
-│   ├── app.e2e-spec.ts             # End-to-end tests
-│   └── jest-e2e.json               # Jest E2E configuration
-├── .test.env                        # Test environment variables
-├── Dockerfile                       # Docker configuration
-├── ecosystem.config.json            # PM2 ecosystem configuration
-├── nest-cli.json                   # NestJS CLI configuration
-├── package.json                     # Project dependencies
-├── tsconfig.json                    # TypeScript configuration
-├── tsconfig.build.json              # TypeScript build configuration
-├── webpack.config.js                # Webpack configuration
-└── README.md                        # Project documentation
+│   │   ├── astroPay.service.js       # AstroPay integration service
+│   │   ├── db.service.js             # Database operations service
+│   │   ├── transaction.service.js    # Transaction processing service
+│   │   └── utils.service.js          # Utility services
+│   ├── test/                         # Test files
+│   │   ├── mocks/                    # Test mocks and fixtures
+│   │   │   └── mocksPayment.js      # Payment test mocks
+│   │   ├── astroPay.controller.test.js # AstroPay controller tests
+│   │   ├── astroPay.service.test.js # AstroPay service tests
+│   │   ├── db.service.test.js        # Database service tests
+│   │   ├── payments.controller.test.js # Payment controller tests
+│   │   └── transaction.service.test.js # Transaction service tests
+│   ├── utils/                        # Utility functions
+│   │   ├── constants/                # Application constants
+│   │   │   ├── httpStatus.js         # HTTP status codes
+│   │   │   └── index.js              # Constants exports
+│   │   ├── logger.js                 # Logging utility
+│   │   └── requestHttp.js            # HTTP request utilities
+│   ├── app.js                        # Express application setup
+│   ├── server.js                     # Server entry point
+│   ├── swagger.json                  # API documentation
+│   ├── package.json                  # Node.js dependencies
+│   ├── package-lock.json             # Dependency lock file
+│   ├── Dockerfile                    # Backend Docker configuration
+│   ├── docker-compose.yml            # Local development setup
+│   ├── Jenkinsfile-prod              # Production deployment pipeline
+│   └── .gitignore                    # Git ignore rules
+├── ecosystem.config.json             # PM2 process manager configuration
+├── Dockerfile                        # Root Docker configuration
+├── .gitlab-ci.yml                    # GitLab CI/CD pipeline
+└── README.md                         # Project documentation
 ```
 
 ## API Endpoints
 
-List of available routes:
+List of available routes (base path: `/api`):
 
-### **Main Application Routes:**
+**Payment Routes:**
 
 ```bash
-GET  /                                 # Welcome page (renders index.hbs)
+POST /payments                         # Create payment transaction
 GET  /payment-methods                  # Get available payment methods
-GET  /api/manifest                     # Get VTEX payment manifest
+GET  /manifest                         # Get payment manifest
+POST /payments/:payment_id/settlements # Process settlement
 ```
 
-### **Authentication Routes:**
+**AstroPay Webhook Routes:**
 
 ```bash
-POST /auth/login                       # User login (requires LocalAuthGuard)
-GET  /profile                          # Get user profile (requires JwtAuthGuard)
+POST /update-payment                   # Handle AstroPay webhook events
 ```
 
-### **Payment Processing Routes:**
+**Health Check Routes:**
 
 ```bash
-# Payment Management (requires JwtAuthGuard)
-GET  /api/payments                     # Get all payments (with pagination and search)
-GET  /api/payments/:id                 # Get specific payment by ID
-
-# Payment Processing (VTEX Integration)
-POST /api/payments                     # Create new payment transaction
-POST /api/payments/process             # Process payment webhook from Aplazo
-POST /api/payments/:paymentId/cancellations  # Cancel payment
-POST /api/payments/:paymentId/refunds        # Process refund
-POST /api/payments/:paymentId/settlements    # Process settlement
-
-# Alternative Settlement Route
-POST /payments/:paymentId/settlements  # Alternative settlement endpoint
+GET  /                                 # Application root endpoint
+GET  /health                           # Health check endpoint
+GET  /astropay-vtex-docs              # API documentation (Swagger UI)
 ```
-
-### **Admin Panel Routes:**
-
-```bash
-GET  /admin                            # Admin dashboard (renders index.hbs)
-GET  /admin/dashboard                  # Admin dashboard page
-GET  /admin/configuration              # Configuration page
-GET  /admin/operations                # Operations page
-GET  /admin/login                     # Admin login page
-```
-
-### **Route Details:**
-
-**Payment Endpoints:**
-- `POST /api/payments` - Creates payment transactions with VTEX integration
-- `POST /api/payments/process` - Handles Aplazo webhook notifications
-- `GET /api/payments` - Retrieves payments with pagination (`page`, `perPage`, `search` parameters)
-- `GET /api/payments/:id` - Gets specific payment details
-
-**Settlement & Refund Endpoints:**
-- `POST /api/payments/:paymentId/cancellations` - Cancels payment transactions
-- `POST /api/payments/:paymentId/refunds` - Processes refunds with amount validation
-- `POST /api/payments/:paymentId/settlements` - Processes settlements
-
-**Authentication:**
-- `POST /auth/login` - User authentication (uses LocalAuthGuard)
-- `GET /profile` - Protected user profile (uses JwtAuthGuard)
-
-**VTEX Integration:**
-- `GET /api/manifest` - Returns VTEX payment manifest configuration
-- `GET /payment-methods` - Returns available payment methods
-
 
 ## Flow Diagrams
 
@@ -305,337 +202,328 @@ GET  /admin/login                     # Admin login page
 sequenceDiagram
     actor Customer
     participant VTEX
-    participant AplazoBackend
+    participant AstroPayBackend
     participant Database
-    participant AplazoAPI
+    participant AstroPayAPI
 
     Customer->>+VTEX: Complete checkout
-    VTEX->>+AplazoBackend: POST /api/payments (payment data)
-    Note over AplazoBackend: 1. Validate VTEX credentials
-    Note over AplazoBackend: 2. Extract Aplazo credentials
-    Note over AplazoBackend: 3. Check for duplicate transaction
+    VTEX->>+AstroPayBackend: POST /api/payments (payment data)
+    Note over AstroPayBackend: 1. Extract AstroPay credentials
+    Note over AstroPayBackend: 2. Create/Find merchant user
+    Note over AstroPayBackend: 3. Build payment request
     
-    alt Transaction exists
-        AplazoBackend->>AplazoBackend: Return existing payment data
-        AplazoBackend->>+VTEX: Payment URL (existing)
-    else New transaction
-        AplazoBackend->>+Database: Save payment (PENDING REGISTER)
-        AplazoBackend->>+AplazoAPI: Authenticate & create loan
-        AplazoAPI->>+AplazoBackend: Payment URL & loan ID
-        Note over AplazoBackend: 4. Update payment status (REGISTERED)
-        AplazoBackend->>+VTEX: Payment URL & transaction data
-    end
+    AstroPayBackend->>+AstroPayAPI: POST /merchant/v1/deposit/init
+    Note over AstroPayAPI: 4. Process payment intention
+    AstroPayAPI->>+AstroPayBackend: Payment URL & external ID
+    Note over AstroPayBackend: 5. Save transaction to DB (PENDING)
+    AstroPayBackend->>+VTEX: Payment URL & transaction data
     
-    VTEX->>+Customer: Redirect to Payment URL
-    Customer->>+AplazoAPI: Complete payment
-    AplazoAPI->>+AplazoBackend: Webhook /api/payments/process (status change)
-    Note over AplazoBackend: 5. Update transaction status in DB
-    AplazoBackend->>+VTEX: Callback with payment status
+    VTEX->>+Customer: Redirect to AstroPay Payment URL
+    Customer->>+AstroPayAPI: Complete payment
+    AstroPayAPI->>+AstroPayBackend: Webhook POST /api/update-payment
+    Note over AstroPayBackend: 6. Update transaction status in DB
+    Note over AstroPayBackend: 7. Process transaction result
+    AstroPayBackend->>+VTEX: Callback with payment status
     VTEX->>+Customer: Payment confirmation
 ```
 
-### Refunds
+### webhook
 
 ```mermaid
 sequenceDiagram
-    actor Merchant
-    participant VTEX
-    participant AplazoBackend
+    participant AstroPay
+    participant Webhook
     participant Database
-    participant AplazoAPI
-
-    Merchant->>+VTEX: Request refund
-    VTEX->>+AplazoBackend: POST /api/payments/:paymentId/refunds
-    Note over AplazoBackend: 1. Extract paymentId, value, requestId
+    participant VTEX
     
-    AplazoBackend->>+Database: Find transaction by paymentId
-    Database->>+AplazoBackend: Transaction data
+    AstroPay->>Webhook: POST /api/update-payment
+    Note over Webhook: {deposit_external_id, status, ...}
     
-    Note over AplazoBackend: 2. Extract Aplazo credentials from body
-    Note over AplazoBackend: 3. Validate refund amount (value || payment.value)
+    Webhook->>Database: findTransaction(externalIntentionId)
+    Database->>Webhook: Transaction data
     
-    alt Payment not found
-        AplazoBackend->>AplazoBackend: Return error response
-        AplazoBackend->>+VTEX: Error response
-    else Payment found
-        AplazoBackend->>+AplazoAPI: Authenticate with merchant credentials
-        AplazoAPI->>+AplazoBackend: Authentication token
+    alt Transaction not found
+        Webhook->>AstroPay: 404 Error
+    else Transaction found & status = PENDING
+        Webhook->>Database: updateTransaction(status)
         
-        AplazoBackend->>+AplazoAPI: POST /api/loan/refund-from-cart
-        Note over AplazoAPI: Request body: cartId, totalAmount, reason
-        AplazoAPI->>+AplazoBackend: Refund response (cartId, status, refundDate)
+        alt status = APPROVED
+            Webhook->>VTEX: POST callback with "approved"
+        else status = CANCELLED  
+            Webhook->>VTEX: POST callback with "denied"
+        end
         
-        Note over AplazoBackend: 4. Update payment status to CANCELLED
-        Note over AplazoBackend: 5. Save cartId from refund response
-        
-        AplazoBackend->>+Database: Update payment status
-        AplazoBackend->>+VTEX: Refund response with refundId
+        VTEX->>Webhook: 200 OK
+        Webhook->>AstroPay: 200 OK
+    else Transaction already processed
+        Webhook->>AstroPay: 200 OK (ignored)
     end
-    
-    VTEX->>+Merchant: Refund confirmation
 ```
 
 ## Middleware and Validations
-The project implements NestJS-specific middleware, guards, and validation patterns to support authentication, request validation, and error handling.
+The project implements a streamlined middleware architecture focused on essential security, validation, and error handling for the AstroPay-VTEX integration.
 
-### **Authentication Guards**
+### **Global Middleware**
+Applied globally in `app.js`:
 
-- 🔐 **JwtAuthGuard**  
-  Validates JWT tokens for protected endpoints using Passport.js JWT strategy.  
-  Authorization: Bearer `<jwt-token>`
-
-  ```typescript
-  @Injectable()
-  export class JwtAuthGuard extends AuthGuard('jwt') {}
-  ```
-  **Usage**: Applied to payment management endpoints (`GET /api/payments`, `GET /api/payments/:id`) and user profile (`GET /profile`)
-
-- 🔑 **LocalAuthGuard**  
-  Handles local authentication for login endpoints using username/password strategy.  
-  **Usage**: Applied to `POST /auth/login` endpoint
-
-  ```typescript
-  @Injectable()
-  export class LocalAuthGuard extends AuthGuard('local') {}
+- 🔒 **CORS Middleware**  
+  Enables Cross-Origin Resource Sharing for API access.  
+  ```js
+  app.use(cors());
   ```
 
-### **Authentication Strategies**
+- 📝 **Body Parser Middleware**  
+  Handles JSON and URL-encoded request bodies with size limits.  
+  ```js
+  app.use(express.json({ extended: false, limit: "50mb" }));
+  app.use(express.urlencoded({ extended: false, limit: "50mb" }));
+  ```
 
-- 🎯 **JwtStrategy**  
-  Implements JWT token validation and payload extraction using Passport.js.
+### **Validation Utilities**
+Located in `services/utils.service.js`:
 
-  ```typescript
-  @Injectable()
-  export class JwtStrategy extends PassportStrategy(Strategy) {
-    constructor() {
-      super({
-        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-        ignoreExpiration: false,
-        secretOrKey: jwtConstants.secret,
-      });
-    }
+- ✅ **validateAlphanumeric**  
+  Validates alphanumeric strings with hyphens for safe input processing.  
+  ```js
+  exports.validateAlphanumeric = (value) => {
+    const pattern = /^[a-zA-Z0-9--]+$/;
+    const regex = new RegExp(pattern);
+    return regex.test(value);
+  };
+  ```
 
-    async validate(payload: any) {
-      return { userId: payload.sub, username: payload.username };
-    }
+- 🔐 **validatePaymentData**  
+  Validates required payment credentials (user, password, storeId).  
+  ```js
+  exports.validatePaymentData = (user, password, storeId) => {
+    return user && password && storeId;
+  };
+  ```
+
+### **Security Features**
+
+- 🔐 **HMAC Signature Validation**  
+  Implements HMAC-SHA256 signature validation for AstroPay API requests.  
+  ```js
+  const hash = cryptoJS
+    .HmacSHA256(JSON.stringify(preRequest), data.astropay_secret)
+    .toString();
+  headers.Signature = hash;
+  ```
+
+- 🛡️ **API Key Authentication**  
+  Uses merchant-specific API keys for VTEX and AstroPay integrations.  
+  ```js
+  headers: {
+    "X-VTEX-API-AppKey": process.env.VTEX_APPKEY,
+    "X-VTEX-API-AppToken": process.env.VTEX_TOKEN,
   }
-  ```
-
-- 🎯 **LocalStrategy**  
-  Implements local authentication using username/password validation.
-
-  ```typescript
-  @Injectable()
-  export class LocalStrategy extends PassportStrategy(Strategy) {
-    constructor(private authService: AuthService) {
-      super();
-    }
-
-    async validate(username: string, password: string): Promise<any> {
-      const user = await this.authService.validateUser(username, password);
-      if (!user) {
-        throw new UnauthorizedException();
-      }
-      return user;
-    }
-  }
-  ```
-
-### **Custom Exceptions**
-
-- ⚠️ **CredentialException**  
-  Custom exception for credential validation errors extending NestJS `UnprocessableEntityException`.
-
-  ```typescript
-  export class CredentialException extends UnprocessableEntityException {
-    constructor(body, status) {
-      super(body, 'ERROR CON LAS CREDENCIALES');
-    }
-  }
-  ```
-
-### **Request Validation**
-
-The project uses NestJS built-in validation patterns:
-
-- **Header Validation**: VTEX API credentials validation through header extraction
-  ```typescript
-  @Headers('x-vtex-api-appkey') appKey,
-  @Headers('x-vtex-api-apptoken') appToken,
-  ```
-
-- **Parameter Validation**: Payment ID and query parameter validation
-  ```typescript
-  @Param('id') id: string
-  @Query('page') page,
-  @Query('perPage') perPage,
-  @Query('search') search,
-  ```
-
-- **Body Validation**: Payment interface validation for request bodies
-  ```typescript
-  @Body() body: PaymentInterface
   ```
 
 ### **Error Handling**
 
-- 🚨 **NestJS Exception Filters**  
-  Built-in exception handling with proper HTTP status codes and error responses.
-  - `UnauthorizedException`: 401 Unauthorized
-  - `UnprocessableEntityException`: 422 Unprocessable Entity
-  - `InternalServerErrorException`: 500 Internal Server Error
-
-### **Application Configuration**
-
-- 🔧 **Global Middleware**  
-  Applied in `main.ts`:
-  - Static file serving for public assets
-  - Handlebars view engine configuration
-  - Port configuration with environment variable fallback
-
-### **Module Structure**
-
-- **AuthModule**: Centralized authentication configuration
-  ```typescript
-  @Module({
-    imports: [
-      ServicesModule,
-      PassportModule,
-      JwtModule.register({
-        secret: jwtConstants.secret,
-        signOptions: { expiresIn: '3600s' },
-      }),
-    ],
-    providers: [AuthService, LocalStrategy, JwtStrategy],
-  })
+- ⚠️ **Global Error Handlers**  
+  Catches unhandled rejections and exceptions with comprehensive logging.  
+  ```js
+  process.on("unhandledRejection", (reason) => {
+    logger.error(`exception occurred \n${JSON.stringify(reason)}`);
+    throw reason;
+  });
   ```
 
-🔄 **Request Flow**
-1. Request enters NestJS application
-2. Route matching and guard execution
-3. Controller method execution
-4. Service layer processing
-5. Response generation with proper error handling
-
-📍 **Route Protection Mapping**
-
-| Route                | Guards Applied                    |
-| -------------------- | --------------------------------- |
-| `GET /api/payments`  | `JwtAuthGuard`                    |
-| `GET /api/payments/:id` | `JwtAuthGuard`                |
-| `POST /auth/login`   | `LocalAuthGuard`                  |
-| `GET /profile`       | `JwtAuthGuard`                    |
-| Payment processing    | No guards (VTEX integration)      |
-| Webhook endpoints    | No guards (Aplazo integration)    |
-
-
-## Error Handling
-
-The application uses NestJS built-in exception handling with custom exceptions and comprehensive logging.
-
-### **Custom Exceptions**
-
-- ⚠️ **CredentialException**: Extends `UnprocessableEntityException` for credential validation errors
-  ```typescript
-  export class CredentialException extends UnprocessableEntityException {
-    constructor(body, status) {
-      super(body, 'ERROR CON LAS CREDENCIALES');
-    }
+- 🚨 **Controller-Level Error Handling**  
+  Implements try-catch blocks with specific error responses and logging.  
+  ```js
+  try {
+    // Business logic
+  } catch (error) {
+    logger.error(error);
+    return res.sendStatus(500);
   }
   ```
 
-### **Built-in NestJS Exceptions**
+### **Data Validation**
 
-- **UnauthorizedException** (401): Used in authentication failures
-- **UnprocessableEntityException** (422): Extended by `CredentialException`
-- **InternalServerErrorException** (500): Used for unexpected server errors
+- 💱 **Payment Data Validation**  
+  Validates required fields in payment requests including merchant settings, user data, and transaction details.  
+  ```js
+  const appKeyAstroPay = merchantSettings.find(
+    (d) => d.name === "Api Key - Astropay"
+  ).value;
+  ```
 
-### **Error Handling Patterns**
+- 🌍 **Country Code Conversion**  
+  Converts ISO-3 country codes to ISO-2 format for AstroPay API compatibility.  
+  ```js
+  const countryIso = getCountryISO2(body.miniCart.billingAddress.country)
+  ```
 
-```typescript
-// Service layer error handling
-try {
-  const { data } = await this.http.post('api/auth', { merchantId, apiToken });
-  return data.Authorization;
-} catch (error) {
-  if (error.response.status == 404) {
-    throw new CredentialException(error.response.data, error.response.status);
+### **Transaction Processing Validation**
+
+- 🔄 **Transaction Status Validation**  
+  Validates transaction states and prevents duplicate processing.  
+  ```js
+  if (transaction.status === "PENDING") {
+    // Process transaction
   }
-  this.logger.error('ERROR AL TRATAR DE HACER LOGIN ', error);
-  throw error;
-}
-```
+  ```
+
+- 📊 **Database Validation**  
+  Validates user existence and transaction integrity before processing.  
+  ```js
+  const user = await db.findUser({
+    astropay_secret: dataUser.astropay_secret,
+  });
+  ```
+
+### **Middleware Application Flow**
+
+1. **Global Middleware** (`app.js`)
+   - CORS configuration
+   - Body parsing
+   - Request logging
+
+2. **Route Processing**
+   - Payment routes (`/api/payments`)
+   - AstroPay webhook routes (`/api/update-payment`)
+
+3. **Controller Logic**
+   - Data validation
+   - Business logic execution
+   - Error handling
+
+4. **Response Processing**
+   - Success/error response formatting
+   - Logging
+
+### **Route Structure**
+
+| Route                | Purpose                                    | Validation Applied                    |
+| -------------------- | ------------------------------------------ | ------------------------------------ |
+| `POST /api/payments` | Create payment transaction                 | Payment data validation              |
+| `GET /api/payment-methods` | Get available payment methods         | None (public endpoint)               |
+| `GET /api/manifest`  | Get payment manifest                      | None (public endpoint)               |
+| `POST /api/payments/:payment_id/settlements` | Process settlement | Payment ID validation                |
+| `POST /api/update-payment` | Handle AstroPay webhooks           | Transaction validation               |
+
+### **Security Considerations**
+
+- **API Key Management**: Uses environment variables for sensitive credentials
+- **Request Signing**: HMAC signatures for AstroPay API communication
+- **Error Masking**: Internal errors are logged but not exposed to clients
+- **Input Validation**: Alphanumeric validation for safe data processing
+- **Database Sanitization**: Mongoose provides built-in injection protection
+
 ## Logging
 
-The project uses NestJS built-in Logger for comprehensive logging across all services.
+The project uses Winston logging library for comprehensive application monitoring and debugging. The logging system is configured in `utils/logger.js` and provides structured logging with timestamps and labels.
 
-```typescript
-import { Logger } from '@nestjs/common';
+### **Logger Configuration**
 
-// Logger initialization in services
-private readonly logger = new Logger(ServiceName.name);
+```js
+const { createLogger, format, transports } = require('winston');
+const { combine, timestamp, label, printf, colorize } = format;
 
-// Logging methods
-this.logger.log('Info message');
-this.logger.error('Error message', error.stack);
-this.logger.warn('Warning message');
-this.logger.debug('Debug message');
+const myFormat = printf(({ level, message, label, timestamp }) => {
+  return `${timestamp} [${label}] ${level}: ${message}`;
+});
+
+const logger = createLogger({
+  format: combine(colorize(), label({ label: 'ASTROPAY-VTEX' }), timestamp(), myFormat),
+  transports: [new transports.Console()],
+});
 ```
 
-**Usage:**
-- **Controllers**: Request/response logging
-- **Services**: Business logic and API interaction logging
-- **Error Handling**: Detailed error tracking with stack traces
-- **Development**: Full logging for debugging
-- **Production**: Optimized logging for performance
+### **Usage Throughout the Application**
+
+```js
+const logger = require("../utils/logger");
+
+// Payment flow logging
+logger.info("===== PAYMENTS =====");
+logger.info(`Transaction ${payment.payment_request_id} successfully created`);
+
+// Webhook processing
+logger.info("===== UPDATE STATUS WEBHOOK =====");
+logger.info(`Transaction ${data.deposit_external_id} APPROVED`);
+
+// Error logging
+logger.error(`[Update - Transaction] ${error.toString()}`);
+logger.error(`Transaction ${paymentId} does not exist`);
+
+// Server startup
+logger.info("@@@@@ FIRING UP SERVER @@@@@");
+```
+
+### **Log Format**
+
+The logger produces structured output with:
+- **Timestamp**: ISO format timestamps
+- **Label**: `ASTROPAY-VTEX` identifier
+- **Level**: Color-coded log levels (error, warn, info, debug)
+- **Message**: Descriptive log messages
+
+### **Global Error Handling**
+
+The application includes global error handlers that log unhandled exceptions:
+
+```js
+process.on("unhandledRejection", (reason) => {
+  logger.error(`exception occurred \n${JSON.stringify(reason)}`);
+  throw reason;
+});
+
+process.on("unhandledException", (reason) => {
+  logger.error(`exception occurred \n${JSON.stringify(reason)}`);
+  throw reason;
+});
+```
+
+### **Database Connection Logging**
+
+Database connection status is logged during application startup:
+
+```js
+logger.info(`mongoose status:${mongoose.connection.readyState}`);
+logger.info(`connected to ${mongoose.connection.name}`);
+```
 
 ## Testing
 
-The project uses Jest for testing with NestJS testing utilities:
+The project uses Mocha with Chai for testing, along with Nock for HTTP mocking and NYC for coverage reporting.
+
+### **Test Scripts**
 
 ```bash
 # Run all tests
 npm test
 
-# Run tests in watch mode
-npm run test:watch
+# Run tests with coverage
+npm run coverage
 
-# Generate coverage report
-npm run test:cov
+# Generate coverage report in LCOV format
+npm run coverage-lcov
 
-# Run end-to-end tests
-npm run test:e2e
-
-# Debug tests
-npm run test:debug
+# Format code
+npm run format
 ```
-
-**Test Configuration:**
-- **Jest**: v27.0.6 with TypeScript support
-- **E2E Tests**: `test/app.e2e-spec.ts` with Supertest
-- **Test Environment**: Isolated test database (`.test.env`)
-- **Coverage**: Reports generated in `coverage/` directory
 
 ## Lint and Prettier
 
-Code quality is maintained using ESLint and Prettier.
+`backend/package.json`.
 
-**Configuration Files:**
-- `.eslintrc.js`: ESLint rules and settings
-- `.prettierrc.json`: Prettier formatting rules
+**Dependencias principales:**
+- `eslint`
+- `eslint-config-airbnb-base`
+- `eslint-config-prettier`
+- `eslint-plugin-import`
+- `eslint-plugin-prettier`
+- `prettier`
 
-**Ignore Files:**
-- `.eslintignore`: Files/directories excluded from linting
-- `.prettierignore`: Files/directories excluded from formatting
-
-**Available Scripts:**
+**Scripts disponibles:**
 ```bash
-yarn lint              # Run ESLint
-yarn lint:fix          # Run ESLint with auto-fix
-yarn prettier          # Check Prettier formatting
-yarn prettier:fix      # Fix Prettier formatting
+npm run format  
 ```
-
 
 ## License
 
